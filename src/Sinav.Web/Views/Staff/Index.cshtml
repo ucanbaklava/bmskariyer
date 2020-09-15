@@ -1,0 +1,316 @@
+﻿@{ Layout = "_Layout";}
+
+@section styles
+{
+      <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css" />
+      <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+
+      <link rel="stylesheet" href="~/assets/libs/sweetalert2/sweetalert2.css"/>
+
+}
+
+<h4 class="d-flex justify-content-between align-items-center w-100 font-weight-bold py-3 mb-4">
+  <div>Kadrolar</div>
+  <button type="button" class="btn btn-primary rounded-pill d-block" data-toggle="modal" data-target="#new-staff"><i class="far fa-plus-square"></i>&nbsp;Yeni Kadro</button>
+
+</h4>
+
+<form id="image-form">
+<input id="file-input" type="file" name="file" style="display: none;" />
+
+</form>
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <div class="card-datatable table-responsive">
+      <table id="staff-list" class="table table-striped table-bordered">
+
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- NEW STAFF MODAL -->
+<div id="new-staff" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="staff-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Yeni Kadro</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <div class="form-group">
+            <label class="form-label">Kurum</label>
+            <select class="form-control" id="organization-select" style="width: 100%" name="organizationId">
+                      <option  selected="selected">Kurum Seçiniz...</option>
+            </select>  
+          </div>
+        <div class="form-group">
+          <label class="form-label">Kadro Adı</label>
+          <input type="text" class="form-control mb-1"  name="name">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary"  data-dismiss="modal">Kapat</button>
+        <button type="submit" class="btn btn-primary" id="submit-staff-form">Kaydet</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+<div id="update-staff" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="update-staff-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Kadro Güncelleme</h5>
+        <input type="text" name="id" id="edit-staff-id" hidden>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+              <label class="form-label">Kadro Adı</label>
+              <input type="text" class="form-control mb-1"  name="Name" id="edit-staff-title">
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+        <button id="submit-update-staff-form" class="btn btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+
+
+@section scripts
+{    
+  <script src="~/assets/libs/select2/select2.js"></script>
+
+  <script src="~/assets/libs/datatables/datatables.js"></script>
+  <script src="~/assets/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="~/assets/js/toastr.min.js"></script>
+
+  <script>
+
+$(document).ready(function() {
+  getOrgs();
+})
+      
+
+    function getOrgs(){
+      let listitems = '';
+      let orgSelect = document.getElementById('organization-select');
+      $.ajax({
+         type: "GET",
+         url: "/organization/GetAllOrganizations",
+         dataType: 'json',
+         success: function(data) {
+             $.each(data, function(key, value){
+                 listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+                 orgSelect.append(new Option(value.name, value.id))
+             });
+         }
+      })
+    
+    }
+
+  function editOrganization(id){
+      $('#update-staff').modal();
+      $.ajax({
+         url: '/staff/getstaffbyid?id=' + id,
+         type: 'POST',
+         success: function (data) {
+             document.getElementById("edit-staff-id").value = data.id;
+             document.getElementById("edit-staff-title").value = data.name;
+ 
+         },
+         cache: false,
+         contentType: false,
+         processData: false
+     });
+  }
+  
+  $("#update-staff-form").submit(function(e) {
+      let id = e.target[0].value;
+      e.preventDefault();    
+       $('#edit-staff-id').val(id);
+       let submitButton = document.getElementById('submit-update-staff-form');
+       submitButton.disabled = true;
+       submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/staff/updatestaff',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.success("Kurum Düzenlendi", "Düzenleme Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.error("Kurum Düzenlenemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+  
+  function deleteStaff(id){
+      Swal.fire({
+        title: 'Bu kadroyu silmek istediğine emin misin?',
+        text: "Silmeden önce iki kere düşün!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "İptal",
+        confirmButtonText: 'Eminim, Son Kararım'
+      }).then((result) => {
+        if (result.value) {
+          $.ajax({
+            url: '/staff/deletestaffbyid?id=' + id,
+            type: 'post',
+            success: function(data) {
+              $('#staff-list').DataTable().ajax.reload();
+              Swal.fire(
+                'Silindi!',
+                'Silindi',
+                'success'
+              )
+            },
+            error: function(data) {
+                Swal.fire(
+                  'Hata!',
+                  'Kadro Silinemedi',
+                  'error'
+                )           
+            }
+          })
+
+        }
+      })
+  }
+ 
+  
+  $("#staff-form").submit(function(e) {
+      e.preventDefault();    
+     let submitButton = document.getElementById('submit-staff-form');
+     submitButton.disabled = true;
+     submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/staff/newstaff',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.success("Kadro kaydedildi", "Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.error("Kadro Kaydedilemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+    
+
+    
+
+$('#staff-list').dataTable({
+  pageLength: 25,
+  lengthMenu: [[2, 5,10, 25, 50, -1], [2, 5, 10, 25, 50, "Tümü"]],
+  processing: true,
+  serverSide: true,
+  ordering: true,
+  paging: true,
+  searchDelay: 1000,
+  pagingType: "full_numbers",
+  rowId: 'id',
+
+  language: {
+    "search": "Ara:",
+    "info": "Toplam _TOTAL_ kayıttan  _END_  kayıt gösteriliyor",
+    "paginate": {
+      "first": "İlk",
+      "last": "Son",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "aria": {
+      "sortAscending":  ": activate to sort column ascending",
+      "sortDescending": ": activate to sort column descending"
+    }
+  },
+  columns: [
+    { data: 'name', title:"Kadro", width: '20%' },
+    { data: 'organization.name', title:"Kadro", width: '20%' },
+    { data: 'organization', title:"Kurum Logo", width: '20%',render: function ( data, type, row ) {
+        return `<img src=${data.orgImage} height="150px;" /> `
+      }},
+
+    {data: null, title:"İşlem", render: function ( data, type, row ) {
+      return ` <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Edit "  onClick="editOrganization(${row.id})"><i class="fas fa-edit"></i></a>
+               <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Remove" onClick="deleteStaff(${row.id})"><i class="fas fa-trash-alt"></i></a>`
+    }},
+  ],
+  "ajax":{
+    type: "POST",
+    url: '/staff/GetStaffFiltered',
+  },
+
+});
+    
+
+
+    </script>
+}

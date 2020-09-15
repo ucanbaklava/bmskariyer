@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0001" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Sinav.Data\Sinav.Data.csproj" />
+    </ItemGroup>
+
+</Project>

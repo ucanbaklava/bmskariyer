@@ -1,0 +1,12 @@
+@model Sinav.Data.Models.Announcement
+@section styles
+{
+    <style>
+
+    </style>
+
+}
+<h2>@Model.Title</h2>
+<small>@Model.Date</small>
+
+<p>@Html.Raw(Model.Content)</p>

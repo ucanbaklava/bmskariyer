@@ -1,0 +1,94 @@
+﻿@model IEnumerable<Sinav.Data.Models.SPResults.GetSubTopicsBySlug>
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Sinav.Web
+@addTagHelper *, Sinav.Web.THelpers.LectureNotesTagHelper
+<div class="card mb-4">
+    <ul class="list-group list-group-flush">
+        @foreach (var subTopic in Model)
+        {
+            <li class="list-group-item py-4">
+                <h6 class="mb-2"><a href="/soru/@subTopic.Slug" class="text-body">@subTopic.Name</a></h6>
+                <div class="text-muted small">
+                    Toplam Soru Sayısı: @subTopic.QuestionCount
+                    <span class="fa fas-eye"></span>
+                </div>
+                <div class="text-muted small float-right">
+                    Çözülen Tekil Soru Sayısı: @subTopic.SolvedQuestionCount
+                    <span class="fa fas-eye"></span>
+                </div>
+            </li>
+        }
+
+    </ul>
+</div>
+
+<br>
+
+<div class="row">
+    <div class="col-md-6">
+        <subject-quiz slug="@ViewBag.Slug"></subject-quiz>
+    </div>
+    <div class="col-md-6">
+        <lecture-notes slug="@ViewBag.Slug"></lecture-notes>
+
+    </div>
+</div>
+
+</div>
+
+
+
+@section styles{
+<style>
+#lecture-notes {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.caret {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+}
+
+.caret::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Safari */'
+  transform: rotate(90deg);  
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+</style>
+}
+
+@section scripts{
+
+<script>
+var toggler = document.getElementsByClassName("caret");
+var i;
+
+for (i = 0; i < toggler.length; i++) {
+  toggler[i].addEventListener("click", function() {
+    this.parentElement.querySelector(".nested").classList.toggle("active");
+    this.classList.toggle("caret-down");
+  });
+}
+</script>
+}

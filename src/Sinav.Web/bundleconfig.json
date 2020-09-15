@@ -1,0 +1,26 @@
+﻿[
+  {
+    "outputFileName": "wwwroot/assets/css/site.min.css",
+    "inputFiles": [
+      "wwwroot/assets/css/bootstrap.css",
+      "wwwroot/assets/css/appwork.css",
+      "wwwroot/assets/css/theme-paper.css",
+      "wwwroot/assets/css/uikit.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/assets/js/site.min.js",
+    "inputFiles": [
+      "wwwroot/assets/js/jquery.min.js",
+      "wwwroot/assets/js/popper/popper.js",
+      "wwwroot/assets/js/bootstrap.js",
+      "wwwroot/assets/js/main.js",
+      "wwwroot/assets/js/sidenav.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  }
+]

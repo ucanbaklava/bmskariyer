@@ -1,0 +1,305 @@
+@{ Layout = "_AccountLayout ";}
+@model Sinav.Web.DTOs.UserRegisterDTO
+
+@section styles
+{
+      <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+
+    <link rel="stylesheet" href="~/assets/css/pages/authentication.css" class="theme-settings-appwork-css">
+    <link rel="stylesheet" href="~/assets/libs/cropperjs/cropper.css" />
+    <style>
+        img{
+          display: block;
+
+        }
+        .cropper-view-box {
+          border-radius: 50%;
+        }
+        .cropper-face {
+          background-color:inherit !important;
+        }
+    </style>
+}
+<div class="authentication-wrapper authentication-4 px-4">
+    <div class="authentication-inner py-5">
+
+      <!-- Logo -->
+      <div class="d-flex justify-content-center align-items-center mb-5">
+        <div class="ui-w-60">
+          <div class="w-100 position-relative" style="padding-bottom: 54%">
+            <a href="/anasayfa"><img class="h-100" style="margin:0 auto; transform: translateX(-50px);" width="160px"  src="~/assets/images/logo.png" /></a>
+          </div>
+        </div>
+      </div>
+      <!-- / Logo -->
+
+      <div class="card">
+        <div class="row no-gutters row-bordered">
+          
+          <!-- Register -->
+          <div class="col-md-12">
+            <h5 class="text-center text-muted font-weight-normal py-4 px-4 px-sm-5 m-0">Hesap Oluştur</h5>
+            <hr class="border-light m-0">
+
+            <div class="px-4 px-sm-5 pt-4 pb-5 pb-sm-5">
+
+              <!-- Register form -->
+              <form asp-action="Register" asp-controller="Account" enctype="multipart/form-data" type="post">
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="FirstName"></label>
+                  <input type="text" class="form-control" asp-for="FirstName">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="LastName"></label>
+                  <input type="text" class="form-control" asp-for="LastName">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="Email"></label>
+                  <input type="text" class="form-control" asp-for="Email">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="Password">Şifre</label>
+                  <input type="password" class="form-control" asp-for="Password">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="PasswordConfirm">Şifre</label>
+                  <input type="password" class="form-control" asp-for="PasswordConfirm">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="OrganizationId">Çalışılan Kurum</label>
+                  <select class="form-control" id="select2-organization" style="width: 100%" data-allow-clear="true"
+                          asp-for="OrganizationId">
+                            <option  selected="selected">Kurum Seçiniz...</option>
+                  </select>                
+                  </div>
+                <div class="form-group">
+                  <label class="form-label" asp-for="StaffId">Yükselmek İstediğiniz Kadro</label>
+                  <select class="form-control" id="select2-staff" style="width: 100%" data-allow-clear="true"
+                          asp-for="StaffId">
+                    <option  selected="selected">Kadro Seçiniz...</option>
+                  </select>               
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label" >Şehir</label>
+                    <select class="form-control" id="select2-city" style="width: 100%" data-allow-clear="true">
+                              <option  selected="selected">Şehir Seçiniz...</option>
+                    </select>                
+                    </div>
+                    
+                    <div class="form-group">
+                      <label class="form-label" asp-for="UnionBranchId">Sendika (Büro Memur-Sen)</label>
+                      <select class="form-control" id="select2-union-branch" style="width: 100%" data-allow-clear="true"
+                              asp-for="UnionBranchId">
+                                <option  selected="selected">Sendika Seçiniz...</option>
+                      </select>                
+                      </div>
+                
+                <div class="form-group">
+                  <label class="form-label" asp-for="Gender">Cinsiyet</label>
+                  <div>
+                    <label class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" asp-for="Gender" value="0">
+                      <span class="form-check-label">
+                        Erkek
+                      </span>
+                    </label>
+                    <label class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" asp-for="Gender" value="1" >
+                      <span class="form-check-label">
+                        Kadın
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label" asp-for="PhoneNumber">Telefon No:<small class="text-muted">Başında 0 olmadan 10 hane olarak giriniz.</small></label>
+                  <input type="tel" class="form-control" asp-for="PhoneNumber" >
+                </div>
+                
+                <input asp-for="Test" hidden="true" id="cropped-image"/>
+                <div class="form-group">
+                  <label class="form-label" asp-for="Avatar">Avatar</label>
+                  <input id="user-image"  onchange="onFileSelected(event)" type="file" accept="image/*" class="form-control" asp-for="Avatar" name="Avatar">
+                  <img src="" id="croppr" />
+                  <button type="button" id="crop">Seç</button>
+                  <button type="button" id="test">Onayla</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-4">Kaydol</button>
+                <div class="text-light small mt-4">
+                  "Kaydol" butonuna tıklayarak 
+                  <a href="/uyelik-sozlesmesi" target="_blank">hizmet şartları ve gizlilik politikamızı</a> kabul etmiş olursunuz.
+                </div>
+              </form>
+              <!-- / Register form -->
+            <div id="result"></div>
+            </div>
+          </div>
+          <!-- / Register -->
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+@section scripts
+{
+
+  <script src="~/assets/libs/cropperjs/cropper.js"></script>
+        <script src="~/assets/libs/select2/select2.js"></script>
+
+<script>
+  
+  $('#select2-organization').select2({
+    ajax: {
+      url: '/organization/GetAllOrganizations',
+      dataType: 'json',
+      processResults: function (data) {
+        return {
+          results: $.map(data, function(obj) {
+            return { id: obj.id, text: obj.name };
+          })
+        };
+      }
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+  
+  $('#select2-organization').on('select2:select', function (e) {
+    $('#select2-staff').select2({
+      ajax: {
+        url: '/staff/GetStaffsByOrganization?organizationId=' +  e.params.data.id,
+        dataType: 'json',
+        processResults: function (data) {
+          return {
+            results: $.map(data, function(obj) {
+              return { id: obj.id, text: obj.name };
+            })
+          };
+        }
+        // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+      }
+    });
+  })
+  
+    
+  $('#select2-city').select2({
+    ajax: {
+      url: '/unionbranch/GetCities',
+      dataType: 'json',
+      processResults: function (data) {
+        return {
+          results: $.map(data, function(obj) {
+            return { id: obj.id, text: obj.name };
+          })
+        };
+      }
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+  
+  $('#select2-city').on('select2:select', function (e) {
+    $('#select2-union-branch').select2({
+      ajax: {
+        url: '/unionbranch/GetBranchesById?cityId=' +  e.params.data.id,
+        dataType: 'json',
+        processResults: function (data) {
+          return {
+            results: $.map(data, function(obj) {
+              return { id: obj.id, text: obj.name };
+            })
+          };
+        }
+        // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+      }
+    });
+  })
+  const imageInput = document.getElementById('user-image');
+  const button = document.getElementById('test');
+  const image = document.getElementById('croppr');
+  $cropper = "";
+  function onFileSelected(event) {
+    if($cropper != "") $cropper.destroy();
+    let selectedFile = event.target.files[0];
+    let reader = new FileReader();
+ 
+    image.title = selectedFile.name;
+    reader.onload = function(event) {
+      image.src = event.target.result;
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+
+  $('#crop').click(function() {
+    const result = document.getElementById('result');
+      $cropper = new Cropper(image, {
+        aspectRatio: 1/1,
+        crop(event) {
+          console.log(event.detail.x);
+          console.log(event.detail.y);
+          console.log(event.detail.width);
+          console.log(event.detail.height);
+          console.log(event.detail.rotate);
+          console.log(event.detail.scaleX);
+          console.log(event.detail.scaleY);
+        },
+          ready() {
+            // Do something here
+            // ...
+            // And then
+            croppable = true;
+          },
+      });
+      
+      button.onclick = function () {
+        let croppedCanvas;
+        let roundedCanvas;
+        let roundedImage;
+        
+    
+        if (!croppable) {
+          return;
+        }
+    
+        // Crop
+        croppedCanvas = $cropper.getCroppedCanvas();
+    
+        // Round
+        roundedCanvas = getRoundedCanvas(croppedCanvas);
+        console.log(roundedCanvas);
+    
+        // Show
+        roundedImage = document.createElement('img');
+        roundedImage.id = "cropper-result";
+        roundedImage.src = roundedCanvas.toDataURL();
+        result.innerHTML = '';
+        result.appendChild(roundedImage);
+        $('#cropped-image').val($('#cropper-result').attr('src'));
+        
+      };
+      
+           
+       function getRoundedCanvas(sourceCanvas) {
+          var canvas = document.createElement('canvas');
+          var context = canvas.getContext('2d');
+          var width = sourceCanvas.width;
+          var height = sourceCanvas.height;
+    
+          canvas.width = width;
+          canvas.height = height;
+          context.imageSmoothingEnabled = true;
+          context.drawImage(sourceCanvas, 0, 0, width, height);
+          context.globalCompositeOperation = 'destination-in';
+          context.beginPath();
+          context.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI, true);
+          context.fill();
+          return canvas;
+        }
+  })
+  
+
+  </script>
+}

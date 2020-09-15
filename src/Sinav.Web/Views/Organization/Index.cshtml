@@ -1,0 +1,298 @@
+﻿@{ Layout = "_Layout";}
+
+@section styles
+{
+      <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css" />
+      <link rel="stylesheet" href="~/assets/libs/sweetalert2/sweetalert2.css"/>
+
+}
+
+<h4 class="d-flex justify-content-between align-items-center w-100 font-weight-bold py-3 mb-4">
+  <div>Kurumlar</div>
+  <button type="button" class="btn btn-primary rounded-pill d-block" data-toggle="modal" data-target="#new-organization"><i class="far fa-plus-square"></i>&nbsp;Yeni Kurum</button>
+
+</h4>
+
+<form id="image-form">
+<input id="file-input" type="file" name="file" style="display: none;" />
+
+</form>
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <div class="card-datatable table-responsive">
+      <table id="organization-list" class="table table-striped table-bordered">
+
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- NEW ORGANIZATION MODAL -->
+<div id="new-organization" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="organization-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Yeni Kurum</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+              <label class="form-label">Kurum Adı</label>
+              <input type="text" class="form-control mb-1"  name="name">
+            </div>
+  
+        <div class="form-group">
+                <label class="form-label">Kurum Logo (Değişmeyecekse boş bırak)</label>
+                <input type="file" class="form-control mb-1"  name="Image">
+              </div>
+
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="submit-organization-form" data-dismiss="modal">Kapat</button>
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+<div id="update-organization" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="update-organization-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Kurum Güncelleme</h5>
+        <input type="text" name="id" id="edit-organization-id" hidden>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+              <label class="form-label">Kurum Adı</label>
+              <input type="text" class="form-control mb-1"  name="Name" id="edit-organization-title">
+            </div>
+          <div class="form-group">
+                <label class="form-label">Kurum Logo</label>
+                <input type="file" class="form-control mb-1"  name="Image">
+              </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+        <button id="submit-update-organization-form" class="btn btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+
+
+@section scripts
+{    
+  <script src="~/assets/libs/datatables/datatables.js"></script>
+  <script src="~/assets/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="~/assets/js/toastr.min.js"></script>
+  <script>
+
+      
+
+        
+
+
+  function editOrganization(id){
+      $('#update-organization').modal();
+      $.ajax({
+         url: '/organization/GetOrgById?id=' + id,
+         type: 'POST',
+         success: function (data) {
+             document.getElementById("edit-organization-id").value = data.id;
+             document.getElementById("edit-organization-title").value = data.name;
+ 
+         },
+         cache: false,
+         contentType: false,
+         processData: false
+     });
+  }
+  
+  $("#update-organization-form").submit(function(e) {
+      let id = e.target[0].value;
+      e.preventDefault();    
+       $('#edit-organization-id').val(id);
+       let submitButton = document.getElementById('submit-update-organization-form');
+       submitButton.disabled = true;
+       submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/organization/updateorganization',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.success("Kurum Düzenlendi", "Düzenleme Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.error("Kurum Düzenlenemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+  
+  function deleteOrganization(id){
+      Swal.fire({
+        title: 'Bu kurumu silmek istediğine emin misin?',
+        text: "Silmeden önce iki kere düşün!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "İptal",
+        confirmButtonText: 'Eminim, Son Kararım'
+      }).then((result) => {
+        if (result.value) {
+          $.ajax({
+            url: '/organization/deleteorgbyid?id=' + id,
+            type: 'post',
+            success: function(data) {
+              $('#organization-list').DataTable().ajax.reload();
+              Swal.fire(
+                'Silindi!',
+                'Silindi',
+                'success'
+              )
+            },
+            error: function(data) {
+                Swal.fire(
+                  'Hata!',
+                  'Kurum Silinemedi',
+                  'error'
+                )           
+            }
+          })
+
+        }
+      })
+  }
+ 
+  
+  $("#organization-form").submit(function(e) {
+      e.preventDefault();    
+     let submitButton = document.getElementById('submit-organization-form');
+     submitButton.disabled = true;
+     submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/organization/NewOrganization',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.success("Kurum kaydedildi", "Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.error("Soru Düzenlenemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+    
+
+    
+
+$('#organization-list').dataTable({
+  pageLength: 25,
+  lengthMenu: [[2, 5,10, 25, 50, -1], [2, 5, 10, 25, 50, "Tümü"]],
+  processing: true,
+  serverSide: true,
+  ordering: true,
+  paging: true,
+  searchDelay: 1000,
+  pagingType: "full_numbers",
+  rowId: 'id',
+
+  language: {
+    "search": "Ara:",
+    "info": "Toplam _TOTAL_ kayıttan  _END_  kayıt gösteriliyor",
+    "paginate": {
+      "first": "İlk",
+      "last": "Son",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "aria": {
+      "sortAscending":  ": activate to sort column ascending",
+      "sortDescending": ": activate to sort column descending"
+    }
+  },
+  columns: [
+    { data: 'name', title:"Kurum", width: '20%' },
+    { data: 'orgImage', title:"Kurum Logo", width: '20%',render: function ( data, type, row ) {
+        return `<img src=${data} height="150px;" /> `
+      }},
+
+    {data: null, title:"İşlem", render: function ( data, type, row ) {
+      return ` <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Edit "  onClick="editOrganization(${row.id})"><i class="fas fa-edit"></i></a>
+               <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Remove" onClick="deleteOrganization(${row.id})"><i class="fas fa-trash-alt"></i></a>`
+    }},
+  ],
+  "ajax":{
+    type: "POST",
+    url: '/organization/GetAllOrganizationsFiltered',
+  },
+
+});
+    
+
+
+    </script>
+}

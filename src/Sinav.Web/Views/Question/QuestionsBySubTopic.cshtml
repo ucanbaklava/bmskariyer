@@ -1,0 +1,375 @@
+﻿@section styles
+{
+  <link rel="stylesheet" href="~/assets/css/toastr.min.css"/>
+  <style>
+  html{scroll-behavior:smooth}
+
+  .question{
+    margin-bottom: 12px;
+  }
+  #qList{
+    width:100%;
+    height: 100%;
+    position: sticky;
+    top: 0;
+  }
+  
+
+</style>
+}
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <h6 class="card-header">
+        Soru Seçimi
+      </h6>
+      <div class="card-body demo-vertical-spacing-sm">
+        <form  id="get-questions">
+          <input type="hidden" name="slug" value="@(ViewBag.Slug)" />
+          <!-- Custom checkbox -->
+          <label class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" name="previouslyAsked" data-val="true" and value="true">
+            <span class="custom-control-label">Çıkmış Soruları Getir</span>
+          </label>
+          <!-- Custom indeterminate checkbox -->
+          <label class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" id="indeterminate-checkbox" name="notSolved" data-val="true" and value="true">
+            <span class="custom-control-label">Daha Önce Çözmediğim Soruları Getir</span>
+          </label>
+
+          <label class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" id="indeterminate-checkbox" name="solvedFalse" data-val="true" and value="true">
+            <span class="custom-control-label">Yanlış Çözdüğüm Soruları Getir</span>
+          </label>
+
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Soru Sayısı &nbsp; <span class="text-muted">(max 75)</span></span>
+            </div>
+              <input type="number" name="questionCount" value="25" max="75" class="form-control"/>
+          </div>
+          
+          
+          
+          
+          <br>
+          <input type="submit" class="btn btn-info" value="Soruları Getir"/>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+<div class="col-md-8">
+  <div id="deneme"></div>
+</div>
+
+<div class="col-md-4" id="qList">
+</div>
+</div>
+
+
+<!--REPORT QUESTION MODAL -->
+<div id="report-question" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="report-form" method="post" asp-action="ReportQuestion" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Soru Öneri/Şikayet</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input id="report-id" name="reportId" hidden />
+        <div class="form-group">
+          <label class="form-label">Soru ile ilgili herhangi bir öneri veya şikayetiniz varsa aşağıdaki alanı doldurup iletebilirsiniz.</label>
+          <textarea rows="10" cols="30" id="feedback" name="feedback" style="width: 100%;"></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+        <button type="submit"  class="btn btn-primary" id="submit-question-form">Gönder</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+<!--REPORT QUESTION MODAL -->
+
+@section scripts
+{
+  <script src="~/assets/js/toastr.min.js"></script>
+
+  <script>
+
+    $('#get-questions').submit(function (e)  {
+         $('#deneme').html("");
+         $('#qList').html("");
+        e.preventDefault();
+        let formData = new FormData(this);
+        console.log(formData)
+          $.ajax({
+              url: '/question/GetQuestionsFiltered',
+              type: 'POST',
+              data: formData,
+              success: function (data) {
+                createQuestionList(data);
+                for (i=0; i<data.length; i++){
+                            $('#deneme').append(`<div class="card question" id="q-${data[i].questionId}">
+                              <div class="card-header" id="question-header">
+                                <small> ${data[i].subTopic} </small>
+                                <a href="javascript:void(0);" onclick="getPreviousAnswers(this,${data[i].questionId})" style="
+                                    margin-left: 10px;
+                                    float: right;
+                                "><i class="fas fa-history"></i></a>
+                                <a href="javascript:void(0);" onclick='showExplanation(${data[i].questionId})' style="margin-left: 10px;float: right;"><i class="fas fa-book"></i></a> 
+                                <a href="javascript:void(0);"   onclick='reportQuestion(${data[i].questionId})'  style="margin-left: 10px;float: right;"><i class="fas fa-flag"></i></a> 
+
+
+                                  <small class="float-right">#${data[i].questionId}</small>
+                                  <small class="float-right mr-2"><a href="javascript:void(0)" class="badge badge-info">Gönderen: ${data[i].sender}</a></small>
+                                  ${data[i].cikmisSoru == true ? `<small class="float-right mr-2"><a href="javascript:void(0)" class="badge badge-success">Çıkmış Soru</a></small>` : "" }
+
+                              </div>
+                              <div class="card-body">
+                                <form id="${data[i].questionId}">
+                                  <input type="hidden" name="questionId" value="${data[i].questionId}" />
+                            
+                                      <div class="form-group row">
+                                    <div class="col-sm-10">
+                                      <p id="question${data[i].questionId}">${data[i].questionContent}</p>
+                                    </div>
+                                  </div>
+                                  <fieldset class="form-group">
+                                    <div class="row">
+                                      <div class="col-sm-10">
+                                        <div class="custom-controls-stacked">
+                                          <label class="custom-control custom-radio">
+                                            <input name="answerId" value="${data[i].options[0].id}" type="radio"   id="a1${data[i].options[0].id}" class="custom-control-input" >
+                                            <span class="custom-control-label" id="o1${data[i].options[0].id}">${data[i].options[0].text}</span>
+                                          </label>
+                                          <label class="custom-control custom-radio">
+                                            <input name="answerId" value="${data[i].options[1].id}" type="radio"  id="a2${data[i].options[1].id}" class="custom-control-input">
+                                            <span class="custom-control-label" id="o2${data[i].options[1].id}">${data[i].options[1].text}</span>
+                                          </label>
+                                          <label class="custom-control custom-radio">
+                                            <input name="answerId" value="${data[i].options[2].id}" type="radio" id="a3${data[i].options[2].id}" class="custom-control-input">
+                                            <span class="custom-control-label" id="o3${data[i].options[2].id}">${data[i].options[2].text}</span>
+                                          </label>
+                                          <label class="custom-control custom-radio">
+                                            <input name="answerId" value="${data[i].options[3].id}" type="radio" id="a4${data[i].options[3].id}" class="custom-control-input">
+                                            <span class="custom-control-label" id="o4${data[i].options[3].id}">${data[i].options[3].text}</span>
+                                          </label>
+                                          <label class="custom-control custom-radio">
+                                            <input name="answerId" value="${data[i].options[4].id}" type="radio" id="a5${data[i].options[4].id}" class="custom-control-input">
+                                            <span class="custom-control-label" id="o5${data[i].options[4].id}">${data[i].options[4].text}</span>
+                                          </label>
+                            
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </fieldset>
+                                  <div class="form-group row">
+                                    <div class="col-sm-10">
+                                      <button type="submit"  onclick="test(${data[i].questionId}, this)" class="btn btn-md btn-info">Kontrol Et</button>
+                                    </div>
+                                  </div>
+                            
+                                </form>
+                              </div>
+                              <div class="card-footer" id="question-footer">
+                                <div id="previous-answers${data[i].questionId}"></div>
+                                <div id="explanation${data[i].questionId}"></div>
+                                </div>
+                              </div>
+                            </div>`)
+                }
+              },
+              cache: false,
+              contentType: false,
+              processData: false
+          });
+    })
+    
+    
+      
+  function getSelectedAnswer(){
+      let ele = document.getElementsByName('answer'); 
+      for(i =0; i< ele.length; i++){
+          if(ele[i].checked){
+              return ele[i].value
+          }
+      }
+  }
+  
+  
+  function createQuestionList(data) {
+        var html = `<h4 class="pt-2 pl-4">Soru Listesi</h4><div class="card-body"><ul class="list-group"  style="overflow-y: auto;height: 70vh;">`;
+        for (i=0; i<data.length; i++){
+            html += `<li class="list-group-item d-flex justify-content-between align-items-center" id="list-${data[i].questionId}"><a href="#q-${data[i].questionId}"> ${i+1}. Soru</a>
+                         </li>`;
+        }
+        
+        html += "</ul></div>";
+        $('#qList').append(html);
+    
+  }
+  
+  
+  
+    
+  function getPreviousAnswers(e,questionId) {
+    let html = "";
+    let id = e.parentElement.nextElementSibling.nextElementSibling.childNodes[1].id;
+    let prevAnswers = $('#' + id);
+    if (isEmptyOrSpaces(prevAnswers.html())){
+        $.ajax({
+            type: "GET",
+            url: "/question/GetPreviousAnswers?questionId=" + questionId,
+            success: function(data){
+                for(i=0; i<data.length; i++){
+                    html += `<span class="text-muted d-block p-1">`;
+                    if (data[i].isTrue == true){
+                        html += `<i class="fas fa-check-circle text-success p-1"></i>`;
+                    }
+                    else html += `<i class="fas fa-times-circle text-danger p-1"></i>`;
+                    html += data[i].answerDate + " - " + data[i].answer + "</span>";
+                }
+                prevAnswers.append(`<h6 class="text-muted">Bu soruya daha önce verdiğiniz cevaplar:</h6>`);
+                prevAnswers.append(html);
+        }
+        });
+    }
+    else prevAnswers.html("")
+  }
+  
+    function showExplanation(questionId) {
+      let expBox = $('#explanation' + questionId);
+      if (isEmptyOrSpaces(expBox.html())){
+          $.ajax({
+              type: "GET",
+              url: "/question/getexplanation?questionId=" + questionId,
+              success: function(data){
+                  expBox.append("<h6>Açıklama/Kaynak</h6>");
+                expBox.append(data);
+          }
+          });
+      }
+      else  expBox.html("");
+    }
+    
+  function isEmptyOrSpaces(str){
+      return str === null || str.match(/^\s*$/) !== null;
+  }
+  
+  
+    function test(id, b){
+      $('#' + id).one('submit', function (e)  {
+        b.disabled = true;
+        b.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+        e.preventDefault();
+        let formData = new FormData(this);
+
+        $.ajax({
+            url: '/question/submit/',
+            type: 'POST',
+            data: formData,
+            success: function (data) {
+              if(data.isCorrect === true){
+                  toastr.success("Tebrikler", "Doğru", {
+                    positionClass:     "toast-top-right",
+                    closeButton:       true,
+                    progressBar:       true,
+                    preventDuplicates: true,
+                    newestOnTop:       true
+                  });
+                   $(`#${id} :input`).prop('disabled', true);
+                  $(b).replaceWith(`<button type="button" class="btn btn-primary"
+                            data-toggle="popover" data-placement="right" data-state="info" 
+                            data-content="${data.correctAnswer}" title=""
+                            data-original-title="Doğru Cevap" >Doğru Cevabı Göster</button>`)
+                  $('[data-toggle="popover"]').popover();
+                  $('#list-' + id).append(`<i class="fas fa-check-circle"></i>`)
+              }
+              else{
+                  toastr.error("", "Yanlış", {
+                    positionClass:     "toast-top-right",
+                    closeButton:       true,
+                    progressBar:       true,
+                    preventDuplicates: true,
+                    newestOnTop:       true
+                  });
+                  $(`#${id} :input`).prop('disabled', true);
+                  $(b).replaceWith(`<button type="button" class="btn btn-primary"
+                            data-toggle="popover" data-placement="right" data-state="info" 
+                            data-content="${data.correctAnswer}" title=""
+                            data-original-title="Doğru Cevap" >Doğru Cevabı Göster</button>`)
+                  $('[data-toggle="popover"]').popover();
+                  $('#list-' + id).append(`<i class="fas fa-times"></i>`)
+
+              }
+            },
+            error: function (data){
+              toastr.error("Cevabınız gönderilemedi. Daha sonra tekrar deneyin.", "HATA", {
+                positionClass:     "toast-top-right",
+                closeButton:       true,
+                progressBar:       true,
+                preventDuplicates: true,
+                newestOnTop:       true
+              });
+              b.disabled = false;
+              $(b).children(0).remove()
+            },
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+      });
+    }
+    
+    function reportQuestion(questionId) {
+      $('#report-question').modal();
+      $('#report-id').val(questionId);
+    }
+    
+    $('#report-form').submit(function (e)  {
+        e.preventDefault();
+        let formData = new FormData(this);
+          $.ajax({
+              url: '/question/reportquestion',
+              type: 'POST',
+              data: formData,
+              success: function (data) {
+                    toastr.success("Gönderildi.", "Gönderildi", {
+                      positionClass:     "toast-top-right",
+                      closeButton:       true,
+                      progressBar:       true,
+                      preventDuplicates: true,
+                      newestOnTop:       true
+                    });
+                    $('#report-question').modal('toggle');
+              },
+              error: function (data){
+                toastr.error("Gönderilemedi. Daha sonra tekrar deneyin.", "HATA", {
+                  positionClass:     "toast-top-right",
+                  closeButton:       true,
+                  progressBar:       true,
+                  preventDuplicates: true,
+                  newestOnTop:       true
+                });
+                $('#report-question').modal('toggle');
+              },
+              cache: false,
+              contentType: false,
+              processData: false
+          });
+    })
+        
+    
+
+  </script>
+}

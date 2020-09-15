@@ -1,0 +1,165 @@
+@{
+  Layout = "_Layout";
+}
+@using Sinav.Data.Models
+@model Sinav.Business.Services.UserServices.UserService.UserSettingsViewModel
+@section styles
+{
+    
+    <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+    <link rel="stylesheet" href="~/assets/libs/bootstrap-tagsinput/bootstrap-tagsinput.css">
+    <link rel="stylesheet" href="~/assets/css/toastr.min.css"/>
+
+}
+<h4 class="font-weight-bold py-3 mb-4">
+  Hesap Ayarları
+</h4>
+
+<div class="card overflow-hidden">
+  <div class="row no-gutters row-bordered row-border-light">
+    <div class="col-md-3 pt-0">
+      <div class="list-group list-group-flush account-settings-links">
+        <a class="list-group-item list-group-item-action active" data-toggle="list" href="#account-general">Genel Ayarlar</a>
+        <a class="list-group-item list-group-item-action" data-toggle="list" href="#account-change-password">Şifre Değiştir</a>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="account-general">
+            <form type="post" asp-action="ChangeUserInfo" asp-controller="Account" enctype="multipart/form-data" >
+
+          <div class="card-body media align-items-center">
+            <img src="@(Model.Avatar != null ? Model.Avatar : "/assets/images/anonymous.png")" alt="" class="d-block ui-w-80">
+            <div class="media-body ml-4">
+              <label class="btn btn-outline-primary">
+                Yeni resim/fotoğraf yükle
+                <input type="file" class="account-settings-fileinput" name="Image"  accept="image/*">
+              </label> &nbsp;
+              <button type="button" class="btn btn-default md-btn-flat">Reset</button>
+
+              <div class="text-light small mt-1">Allowed JPG, GIF or PNG. Max size of 800K</div>
+            </div>
+          </div>
+          <hr class="border-light m-0">
+
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Ad</label>
+                <input type="text" class="form-control mb-1" value="@Model.FirstName" asp-for="FirstName">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Soyad</label>
+                <input type="text" class="form-control" value="@Model.LastName" asp-for="LastName">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="text" class="form-control mb-1" disabled value="@Model.Email">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Çalışılan Kurum</label>
+                <input type="text" class="form-control mb-1" disabled value="@Model.OrgName"/>
+
+              </div>
+              <div class="form-group">
+                <label class="form-label">Yükselmek İstediğiniz Kadro</label>
+                <input type="text" class="form-control mb-1" disabled value="@Model.StaffName"/>
+
+              </div>
+            </div>
+                            <button type="submit" class="btn btn-primary">Kaydet</button>&nbsp;
+
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="account-change-password">
+          <div class="card-body pb-2">
+
+            <form id="change-password-form">
+                  <div class="form-group">
+                    <label class="form-label">Güncel Şifre</label>
+                    <input type="password" class="form-control" name="password">
+                  </div>
+      
+                  <div class="form-group">
+                    <label class="form-label">Yeni Şifre</label>
+                    <input type="password" class="form-control" name="newPassword">
+                  </div>
+      
+      
+              <div class="form-group">
+                <label class="form-label">Yeni Şifre (Tekrar)</label>
+                <input type="password" class="form-control" name="newPasswordConfirm">
+              </div>
+              
+                <button type="submit" class="btn btn-primary">Şifre Değiştir</button>&nbsp;
+
+            </form>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+</div>
+</div>
+
+
+
+@section scripts
+{
+    <script src="~/assets/libs/select2/select2.js"></script>
+    <script src="~/assets/libs/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
+    <script src="~/assets/js/pages_account-settings.js"></script>
+    <script src="~/assets/js/forms_selects.js"></script>  
+    <script src="~/assets/js/toastr.min.js"></script>
+
+    
+    <script>
+        function sendActivationMail() {
+          $.ajax({
+            url: '/account/ResendActivationMail',
+            type: 'POST',
+            success: function(data){
+                alert("Onay Maili Gönderildi. Mailinizi Kontrol Edin");
+            },
+            error: function(data){
+                alert("Hata Oluştu. Daha Sonra Tekrar Deneyin")
+            }
+          })
+        }
+        
+        $('#change-password-form').on('submit',function(e){
+            e.preventDefault();
+            let formData = new FormData(this);
+            $.ajax({
+              type: "post",
+              url: "/account/ChangePassword",
+              data: formData,
+              processData: false,
+              contentType: false,
+              cache: false,
+              success: function(data) {
+
+                  toastr.success(data, "Şifre Değiştirildi", {
+                    positionClass:     "toast-top-right",
+                    closeButton:       true,
+                    progressBar:       true,
+                    preventDuplicates: true,
+                    newestOnTop:       true
+                  });
+              },
+              error: function(data) {
+                  toastr.error(data, "HATA", {
+                    positionClass:     "toast-top-right",
+                    closeButton:       true,
+                    progressBar:       true,
+                    preventDuplicates: true,
+                    newestOnTop:       true
+                  });
+              }
+            })
+        })
+    </script>
+
+
+}

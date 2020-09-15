@@ -1,0 +1,417 @@
+﻿@{ Layout = "_Layout";}
+
+@section styles
+{
+      <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css" />
+      <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+
+      <link rel="stylesheet" href="~/assets/libs/sweetalert2/sweetalert2.css"/>
+
+}
+
+<h4 class="d-flex justify-content-between align-items-center w-100 font-weight-bold py-3 mb-4">
+  <div>PDF TESTLER</div>
+
+</h4>
+
+<form id="image-form">
+<input id="file-input" type="file" name="file" style="display: none;" />
+
+</form>
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <div class="card-datatable table-responsive">
+      <table id="test-list" class="table table-striped table-bordered">
+
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<div id="update-test" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+  <form id="update-test-form" method="post" enctype="multipart/form-data">
+    <input type="text" id="edit-test-id" hidden/>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLiveLabel">Deneme Güncelleme</h5>
+          <input type="text" name="id" id="edit-staff-id" hidden>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Deneme Adı</label>
+            <input type="text" class="form-control mb-1" name="Name" id="edit-test-name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Süre (dakika)</label>
+            <input type="number" class="form-control" name="time" id="edit-test-time">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cevaplar (Her bir cevap virgülle ayrılmalı.)</label>
+            <input type="text" class="form-control" name="answers" id="edit-test-answers">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label w-100">PDF Dosyası</label>
+            <input type="file" name="pdf">
+            <small class="form-text text-muted">Dosya boyutunun küçük olmasına dikkat edin.</small>
+          </div>
+          <div style="display: inline-block; width: 500px;">
+            <div class="form-group">
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="overall" id="edit-test-overall">
+                <div class="form-check-label">
+                  Genel Deneme
+                </div>
+              </label>
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kurum</label>
+            <select class="form-control" id="select2-organization" onchange="getSubjects(this)"  style="width: 100%" data-allow-clear="true" name="OrgId" >
+              <option selected="selected">Kurum Seçiniz...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ana Konu</label>
+            <select class="form-control" id="select2-subject" onchange="getSubTopics(this)" style="width: 100%" data-allow-clear="true"
+                    name="SubjectId">
+              <option selected="selected">Ana Konu...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Alt Konu <small>Ana Konu testi olarak eklenecekse boş bırakın.</small></label>
+            <select class="form-control" name="SubTopicId" id="select2-subtopic" style="width: 100%" data-allow-clear="true">
+              <option selected="selected">Alt Konu...</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+          <button id="submit-update-staff-form" class="btn btn-primary">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+@section scripts
+{    
+  <script src="~/assets/libs/select2/select2.js"></script>
+
+  <script src="~/assets/libs/datatables/datatables.js"></script>
+  <script src="~/assets/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="~/assets/js/toastr.min.js"></script>
+
+  <script>
+
+    $(document).ready(function() {
+
+    });
+    
+    $('#update-test').on("hide.bs.modal", function() {
+    	    document.getElementById("select2-organization").options.length = 0;
+          document.getElementById("select2-subject").options.length = 0;
+
+    	    //$('#edit-subject-select').append(new Option("", ))
+    });
+    
+
+  
+  function getOrganizations(selector){
+    let listitems = '';
+    listitems += "<option value=''>Kurum</option>";
+
+    orgSelect = document.getElementById(selector);
+    $.ajax({
+       type: "GET",
+       url: "/organization/GetAllOrganizations",
+       dataType: 'json',
+       success: function(data) {
+           $.each(data, function(key, value){
+               listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+               orgSelect.append(new Option(value.name, value.id))
+           });
+       }
+    })
+  }
+
+      function getSubjects(selectObject){
+        if (selectObject.value === "" || selectObject.value === "Kurum Seçiniz..." || selectObject.value === null) getCommonSubjects()
+        else{
+          subjectSelect = document.getElementById("select2-subject");
+          subjectSelect.options.length = 0;
+          var listitems = '';
+          listitems += "<option value=''>Konu</option>";
+          $.ajax({
+             type: "GET",
+             url: "/subject/GetSubjectsbyorganizationid?id=" + selectObject.value,
+             dataType: 'json',
+             success: function(data) {
+                 $.each(data, function(key, value){
+                     listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+                     subjectSelect.append(new Option(value.name, value.id))
+                 });
+             }
+          })
+        }
+
+      }
+    
+    function  getCommonSubjects() {
+      subjectSelect = document.getElementById("select2-subject");
+      subjectSelect.options.length = 0;
+      var listitems = '';
+      $('<option>').val('').text('Konu').appendTo(subjectSelect);
+      $.ajax({
+         type: "GET",
+         url: "/subject/getcommonsubjects",
+         dataType: 'json',
+         success: function(data) {
+             $.each(data, function(key, value){
+                 listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+                 subjectSelect.append(new Option(value.name, value.id))
+             });
+         }
+      })
+    }
+    function getSubTopics(selectObject){
+      subTopicSelect = document.getElementById("select2-subtopic");
+      subTopicSelect.options.length = 0;
+      let value = selectObject.value;  
+      var listitems = '';
+      $('<option>').val('').text('Alt Konu').appendTo(subTopicSelect);
+      $.ajax({
+         type: "GET",
+         url: "/subtopic/getsubtopicsbysubjectid?id=" + value,
+         dataType: 'json',
+         success: function(data) {
+             $.each(data, function(key, value){
+                 listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+                 subTopicSelect.append(new Option(value.name, value.id))
+             });
+         }
+      })
+    }
+
+  function editTest(id){
+      $('#update-test').modal();
+      getOrganizations("select2-organization");
+      $.ajax({
+         url: '/pdf/gettestbyid?id=' + id,
+         type: 'POST',
+         success: function (data) {
+             document.getElementById("edit-test-id").value = data.id;
+             document.getElementById("edit-test-name").value = data.name;
+             document.getElementById("edit-test-answers").value = data.answers;
+             document.getElementById("edit-test-time").value = data.time;
+             $('#select2-organization').val(data.organizationId).change();
+
+             $('#select2-subject').val(data.subjectId).change();
+
+
+             if (data.overall){
+               $('#edit-test-overall').attr('checked', 'checked');
+             }
+             if (data.organizationId === null){
+               $('#select2-subject').val(data.subjectId).change();
+             }
+             
+
+
+ 
+         },
+         cache: false,
+         contentType: false,
+         processData: false
+     });
+  }
+  
+  $("#update-staff-form").submit(function(e) {
+      let id = e.target[0].value;
+      e.preventDefault();    
+       $('#edit-staff-id').val(id);
+       let submitButton = document.getElementById('submit-update-staff-form');
+       submitButton.disabled = true;
+       submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/staff/updatestaff',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.success("Kurum Düzenlendi", "Düzenleme Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.error("Kurum Düzenlenemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+  
+  function deleteTest(id){
+      Swal.fire({
+        title: 'Bu testi silmek istediğine emin misin?',
+        text: "Silmeden önce iki kere düşün!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "İptal",
+        confirmButtonText: 'Eminim, Son Kararım'
+      }).then((result) => {
+        if (result.value) {
+          $.ajax({
+            url: '/pdf/deletetestbyid?id=' + id,
+            type: 'post',
+            success: function(data) {
+              $('#test-list').DataTable().ajax.reload();
+              Swal.fire(
+                'Silindi!',
+                'Silindi',
+                'success'
+              )
+            },
+            error: function(data) {
+                Swal.fire(
+                  'Hata!',
+                  'Test Silinemedi',
+                  'error'
+                )           
+            }
+          })
+
+        }
+      })
+  }
+ 
+  
+  $("#staff-form").submit(function(e) {
+      e.preventDefault();    
+     let submitButton = document.getElementById('submit-staff-form');
+     submitButton.disabled = true;
+     submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/staff/newstaff',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#staff-list').DataTable().ajax.reload();
+               toastr.success("Kadro kaydedildi", "Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#organization-list').DataTable().ajax.reload();
+               toastr.error("Kadro Kaydedilemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+    
+
+    
+
+$('#test-list').dataTable({
+  pageLength: 25,
+  lengthMenu: [[2, 5,10, 25, 50, -1], [2, 5, 10, 25, 50, "Tümü"]],
+  processing: true,
+  serverSide: true,
+  ordering: true,
+  paging: true,
+  searchDelay: 1000,
+  pagingType: "full_numbers",
+  rowId: 'id',
+
+  language: {
+    "search": "Ara:",
+    "info": "Toplam _TOTAL_ kayıttan  _END_  kayıt gösteriliyor",
+    "paginate": {
+      "first": "İlk",
+      "last": "Son",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "aria": {
+      "sortAscending":  ": activate to sort column ascending",
+      "sortDescending": ": activate to sort column descending"
+    }
+  },
+  columns: [
+    { data: 'name', title:"Name", width: '20%' },
+    {data: 'org', title:"Kurum", render: function ( data, type, row ) {
+      return `${data !== null ? data.name : ""} `
+    }},    { data: 'questionCount', title:"Soru Sayısı", width: '20%'},
+    {data: 'subTopic', title:"Alt Konu", render: function ( data, type, row ) {
+      return `${data !== null ? data.name : ""} `
+    }},
+    {data: null, title:"İşlem", render: function ( data, type, row ) {
+      return ` <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Edit "  onClick="editTest(${row.id})"><i class="fas fa-edit"></i></a>
+               <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Remove" onClick="deleteTest(${row.id})"><i class="fas fa-trash-alt"></i></a>`
+    }},
+  ],
+  "ajax":{
+    type: "POST",
+    url: '/pdf/GetAllTests',
+  },
+
+});
+    
+
+
+    </script>
+}

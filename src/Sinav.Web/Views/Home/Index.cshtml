@@ -1,0 +1,41 @@
+@using System.Security.Claims
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Sinav.Web
+
+@{
+  var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+
+
+<announcement-list usid="@userId"></announcement-list>
+<h1>@ViewBag.Count</h1>
+
+<div class="row">
+  <div class="col-md-6">
+          <field-subjects user-id="@userId"></field-subjects>
+
+  </div>
+  
+  <div class="col-md-6">
+    <common-subjects></common-subjects>
+  </div>
+  
+  <div class="col-md-12">
+        <deneme user-id="@userId"></deneme>
+
+
+  </div>
+  
+
+
+</div>
+
+
+
+
+@section scripts
+{
+
+}

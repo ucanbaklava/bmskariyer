@@ -1,0 +1,81 @@
+@section styles
+{
+    <link rel="stylesheet" href="~/assets/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.css">
+    <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css">
+    <style>
+        .is-approved{
+            width:80px;
+        }
+    </style>
+}
+<div class="container-fluid flex-grow-1 container-p-y">
+  <h4 class="font-weight-bold py-3 mb-4">
+    Kullanıcılar
+  </h4>
+  <!-- Filters -->
+  <div class="ui-bordered px-4 pt-4 mb-4">
+    <div class="form-row align-items-center">
+      <div class="col-md mb-4">
+        <label class="form-label">Verified</label>
+        <select class="custom-select">
+          <option>Any</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+      </div>
+      <div class="col-md mb-4">
+        <label class="form-label">Role</label>
+        <select class="custom-select">
+          <option>Any</option>
+          <option>User</option>
+          <option>Author</option>
+          <option>Staff</option>
+          <option>Admin</option>
+        </select>
+      </div>
+      <div class="col-md mb-4">
+        <label class="form-label">Status</label>
+        <select class="custom-select">
+          <option>Any</option>
+          <option>Active</option>
+          <option>Banned</option>
+          <option>Deleted</option>
+        </select>
+      </div>
+      <div class="col-md mb-4">
+        <label class="form-label">Latest activity</label>
+        <input type="text" id="user-list-latest-activity" class="form-control" placeholder="Any">
+      </div>
+      <div class="col-md col-xl-2 mb-4">
+        <label class="form-label d-none d-md-block">&nbsp;</label>
+        <button type="button" class="btn btn-secondary btn-block">Show</button>
+      </div>
+    </div>
+  </div>
+  <!-- / Filters -->
+
+  <div class="card">
+
+
+    <div class="card">
+      <h6 class="card-header">
+        Kullanıcı Listesi
+      </h6>
+      <div class="card-datatable table-responsive">
+          <table id="user-list" class="display" style="width:100%">
+
+          </table>
+          </div>
+        </div>
+</div>
+      </div>
+
+
+@section scripts
+{
+    <script src="~/assets/libs/moment/moment.js"></script>
+    <script src="~/assets/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.js"></script>
+    <script src="~/assets/libs/datatables/datatables.js"></script>
+  
+    <script src="~/assets/js/pages_users_list.js"></script>
+}

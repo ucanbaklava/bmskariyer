@@ -1,0 +1,177 @@
+﻿@{ Layout = "_Layout";}
+@model Sinav.Web.DTOs.NewPdfTest
+
+@section styles
+{
+    <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+      <link rel="stylesheet" href="~/assets/css/toastr.min.css" /> 
+
+}
+
+
+<div class="card mb-4">
+    <h6 class="card-header">
+        PDF Test Ekle
+    </h6>
+    <div class="card-body">
+        <form asp-action="CreateTest" asp-controller="Pdf"   method="post" id="new-pdftest">
+            <div class="form-group">
+                <label class="form-label">Deneme Adı</label>
+                <input type="text" class="form-control" asp-for="Name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Süre (dakika)</label>
+                <input type="number" class="form-control" asp-for="Time">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cevaplar (Her bir cevap virgülle ayrılmalı.)</label>
+                <input type="text" class="form-control" asp-for="Answers">
+            </div>
+        
+            <div class="form-group">
+                <label class="form-label w-100">PDF Dosyası</label>
+                <input type="file" asp-for="Pdf">
+                <small class="form-text text-muted">Dosya boyutunun küçük olmasına dikkat edin.</small>
+            </div>
+            <div style="display: inline-block; width: 500px;" >
+              <div class="form-group">
+                <label class="form-check">
+                  <input class="form-check-input" type="checkbox" name="overall">
+                  <div class="form-check-label">
+                    Genel Deneme 
+                  </div>
+                </label>
+              </div>
+                                          
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Kurum</label>
+              <select class="form-control" id="select2-organization" style="width: 100%" data-allow-clear="true" asp-for="OrgId">
+                        <option  selected="selected">Kurum Seçiniz...</option>
+              </select>                
+              </div>
+            
+            <div class="form-group">
+                <label class="form-label" >Ana Konu</label>
+                <select class="form-control" id="select2-subject" style="width: 100%" data-allow-clear="true"
+                        asp-for="SubjectId">
+                    <option  selected="selected">Ana Konu...</option>
+                </select>                
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" asp-for="SubTopicId">Alt Konu <small>Ana Konu testi olarak eklenecekse boş bırakın.</small></label>
+                <select class="form-control" id="select2-subtopic" style="width: 100%" data-allow-clear="true"
+                        asp-for="SubTopicId">
+                    <option  selected="selected">Alt Konu...</option>
+                </select>               
+            </div>
+        
+
+            <button type="submit" class="btn btn-default" id="submit-pdftest-form">Oluştur</button>
+        </form>
+    </div>
+</div>
+
+
+@section scripts
+{
+    <script src="~/assets/libs/select2/select2.js"></script>
+  <script src="~/assets/js/toastr.min.js"></script>
+
+    <script>
+    
+    
+    
+  $('#select2-organization').select2({
+    ajax: {
+      url: '/organization/GetAllOrganizations',
+      dataType: 'json',
+      processResults: function (data) {
+        return {
+          results: $.map(data, function(obj) {
+            return { id: obj.id, text: obj.name };
+          })
+        };
+      }
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+  
+  
+  $('#select2-subject').select2({
+    ajax: {
+      url: '/subject/GetSubjects',
+      dataType: 'json',
+      processResults: function (data) {
+        return {
+          results: $.map(data, function(obj) {
+            return { id: obj.id, text: obj.name };
+          })
+        };
+      }
+      // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    }
+  });
+  
+  $('#select2-subject').on('select2:select', function (e) {
+    $('#select2-subtopic').select2({
+      ajax: {
+        url: '/subtopic/GetSubTopicsBySubjectId?id=' +  e.params.data.id,
+        dataType: 'json',
+        processResults: function (data) {
+          return {
+            results: $.map(data, function(obj) {
+              return { id: obj.id, text: obj.name };
+            })
+          };
+        }
+        // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+      }
+    });
+  })
+  
+     
+        $("#new-pdftest").submit(function(e) {
+            e.preventDefault();    
+             let submitButton = document.getElementById('submit-pdftest-form');
+             submitButton.disabled = true;
+             submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+            let formData = new FormData(this);
+            $.ajax({
+                url: '/pdf/createtest',
+                type: 'POST',
+                data: formData,
+                 success: function (data) {
+                     toastr.success("Test Oluşturuldu", "Başarılı", {
+                       positionClass:     "toast-top-right",
+                       closeButton:       true,
+                       progressBar:       true,
+                       preventDuplicates: true,
+                       newestOnTop:       true
+                     });
+                     submitButton.disabled = false;
+                     $(submitButton).children(0).remove()
+                 },
+                 error: function (data){
+                     $('#question-list').DataTable().ajax.reload();
+                     toastr.error("Test Oluşturulamadı", "HATA", {
+                       positionClass:     "toast-top-right",
+                       closeButton:       true,
+                       progressBar:       true,
+                       preventDuplicates: true,
+                       newestOnTop:       true
+                     });
+                     submitButton.disabled = false;
+                     $(submitButton).children(0).remove()
+                 },
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
+      
+  
+  </script>
+}

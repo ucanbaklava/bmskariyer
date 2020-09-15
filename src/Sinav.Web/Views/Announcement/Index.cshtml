@@ -1,0 +1,653 @@
+@{ Layout = "_Layout";}
+
+@section styles
+{
+      <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+      <link rel="stylesheet" href="~/assets/libs/bootstrap-markdown/bootstrap-markdown.css" />
+      <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css" />
+      <link rel="stylesheet" href="~/assets/libs/sweetalert2/sweetalert2.css"/>
+        <style>
+          @@media (min-width: 576px) {
+            .modal-dialog { max-width: none; }
+          }
+          
+          .modal-dialog {
+            width: 98%;
+            height: 92%;
+            padding: 0;
+          }
+          
+          .modal-content {
+            height: 99%;
+          }
+          .md-editor{
+            height: 650px;
+          }
+        </style>
+}
+
+<h4 class="d-flex justify-content-between align-items-center w-100 font-weight-bold py-3 mb-4">
+  <div>Duyurular</div>
+  <button type="button" class="btn btn-primary rounded-pill d-block" data-toggle="modal" data-target="#new-announcement"><i class="far fa-plus-square"></i>&nbsp;Yeni Duyuru</button>
+
+</h4>
+
+<form id="image-form">
+<input id="file-input" type="file" name="file" style="display: none;" />
+
+</form>
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <div class="card-datatable table-responsive">
+      <table id="announcement-list" class="table table-striped table-bordered">
+
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- NEW SUBJECT MODAL -->
+<div id="new-announcement" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="announcement-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Yeni Duyuru</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+              <label class="form-label">Başlık</label>
+              <input type="text" class="form-control mb-1"  name="title">
+            </div>
+        <div class="form-group">
+          <label class="form-label">Kurum (Genel duyuru ise boş bırakın.)</label>
+          <select class="custom-select" id="organization-select" name="organizationId">
+            <option label=" "></option>
+
+          </select>
+
+        </div>
+        <div class="form-group">
+          <textarea id="bs-markdown"  data-provide="markdown" rows="10" style="height:100%"></textarea>
+          <input type="text" id="content" hidden name="content"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+        <button type="submit" id="submit-new-announcement-form"  class="btn btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+<div id="update-announcement" class="modal fade" tabindex="-1" role="dialog"  aria-hidden="true">
+   <form id="update-announcement-form" method="post" enctype="multipart/form-data">
+     <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Duyuru Güncelleme</h5>
+        <input type="text" name="id" id="edit-announcement-id" hidden>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+              <label class="form-label">Başlık</label>
+              <input type="text" class="form-control mb-1"  name="title" id="edit-announcement-title">
+            </div>
+
+
+        <div class="form-group">
+          <textarea id="edit-bs-markdown"  data-provide="markdown" rows="10" style="height:100%"></textarea>
+          <input type="text" id="edit-content" hidden name="content"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+        <button id="submit-update-announcement-form" class="btn btn-primary">Güncelle</button>
+      </div>
+    </div>
+  </div>
+   </form>
+</div>
+
+
+
+
+
+@section scripts
+{    
+  <script src="~/assets/libs/datatables/datatables.js"></script>
+  <script src="~/assets/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="~/assets/libs/bootstrap-markdown/bootstrap-markdown.js"></script>
+  <script src="~/assets/libs/select2/select2.js"></script>
+  <script src="~/assets/js/showdown.min.js"></script>
+  <script src="~/assets/js/toastr.min.js"></script>
+  <script>
+    //showdown.setOption('parseImgDimensions', true);
+      var myext = function () {
+        var myext1 = {
+           type:    'lang',
+           regex:   '\\!\\[[null]*?\\]\\(<?(.*)>? =([0-9]{1,4})x([0-9]{1,4})\\)',
+           replace: function (m, $1, $2, $3) {   
+               let src = $1.replace(">", "");
+               return `<img src="${src}" class="img-responsive" style="width:${$2}px;height:${$3}px;" \/>  `
+           }
+        }
+
+        return [myext1];
+      }
+      
+
+        
+          let converter = new showdown.Converter({extensions: [myext()]});
+
+
+  let convertFunction = converter.makeHtml.bind(converter);
+  function editAnnouncement(id){
+      $('#update-announcement').modal();
+      $.ajax({
+         url: '/announcement/GetAnnouncementById?id=' + id,
+         type: 'POST',
+         success: function (data) {
+             document.getElementById("edit-announcement-id").value = data.id;
+             document.getElementById("edit-announcement-title").value = data.title;
+
+             $('#edit-content').val($('#edit-bs-markdown').data('markdown').setContent(converter.makeMarkdown(data.content)));    
+ 
+         },
+         cache: false,
+         contentType: false,
+         processData: false
+     });
+  }
+  
+    
+    $(document).ready(function() {
+      getOrgs("organization-select");
+    });
+    
+
+  function getOrgs(selector){
+    var listitems = '';
+    subjectSelect = document.getElementById(selector);
+    $.ajax({
+       type: "GET",
+       url: "/organization/GetAllOrganizations",
+       dataType: 'json',
+       success: function(data) {
+           $.each(data, function(key, value){
+               listitems += "<option value='" +value.id +"'>"+ value.name + "</option>";
+               subjectSelect.append(new Option(value.name, value.id))
+           });
+           console.log(listitems);
+       }
+    })
+
+  }
+  
+  $("#update-announcement-form").submit(function(e) {
+      let id = e.target[0].value;
+      e.preventDefault();    
+       $('#edit-content').val($('#edit-bs-markdown').data('markdown').parseContent());
+       $('#edit-announcement-id').val(id);
+       let submitButton = document.getElementById('submit-update-announcement-form');
+       submitButton.disabled = true;
+       submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      $.ajax({
+          url: '/announcement/updateannouncement',
+          type: 'POST',
+          data: formData,
+           success: function (data) {
+               $('#announcement-list').DataTable().ajax.reload();
+               toastr.success("Soru Düzenlendi", "Düzenleme Başarılı", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+           error: function (data){
+               $('#announcement-list').DataTable().ajax.reload();
+               toastr.error("Soru Düzenlenemedi. Daha Sonra Tekrar Deneyin", "HATA", {
+                 positionClass:     "toast-top-right",
+                 closeButton:       true,
+                 progressBar:       true,
+                 preventDuplicates: true,
+                 newestOnTop:       true
+               });
+               submitButton.disabled = false;
+               $(submitButton).children(0).remove()
+           },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+  
+  function deleteAnnouncement(id){
+      Swal.fire({
+        title: 'Bu duyuruyu silmek istediğine emin misin?',
+        text: "Silmeden önce iki kere düşün!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "İptal",
+        confirmButtonText: 'Eminim, Son Kararım'
+      }).then((result) => {
+        if (result.value) {
+          $.ajax({
+            url: '/announcement/deleteAnnouncement?announcementId=' + id,
+            type: 'post',
+            success: function(data) {
+              $('#announcement-list').DataTable().ajax.reload();
+              Swal.fire(
+                'Silindi!',
+                'Silindi',
+                'success'
+              )
+            },
+            error: function(data) {
+                Swal.fire(
+                  'Hata!',
+                  'Duyuru Silinemedi',
+                  'error'
+                )           
+            }
+          })
+
+        }
+      })
+  }
+ 
+  
+  $("#announcement-form").submit(function(e) {
+      e.preventDefault();    
+      $('#content').val($('#bs-markdown').data('markdown').parseContent());
+       let submitButton = document.getElementById('submit-new-announcement-form');
+       submitButton.disabled = true;
+       submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      let formData = new FormData(this);
+      console.log($('#content').val());
+      $.ajax({
+          url: '/announcement/createannouncement',
+          type: 'POST',
+          data: formData,
+          success: function (data) {
+            $('#announcement-list').DataTable().ajax.reload();          
+              Swal.fire(
+                'Duyuru Oluşturuldu!',
+                'Yeni Duyuru',
+                'success'
+              )
+             submitButton.disabled = false;
+             $(submitButton).children(0).remove()
+          },
+          error: function (data){
+            $('#announcement-list').DataTable().ajax.reload();
+              Swal.fire(
+                'Hata!',
+                'Duyuru Oluştururken Hata',
+                'error'
+              )  
+             submitButton.disabled = false;
+             $(submitButton).children(0).remove()
+          },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+    
+    function deleteUser(subjectId, rowName){
+      Swal.fire({
+        title: rowName + ' konusunu silmek istediğine emin misin?',
+        text: "Silmeden önce iki kere düşün!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Eminim, Son Kararım'
+      }).then((result) => {
+        if (result.value) {
+          Swal.fire(
+            'Silindi!',
+            'Silindi',
+            'success'
+          )
+        }
+      })
+    }
+    
+    $('#select2-organization').select2({
+      ajax: {
+        url: '/organization/GetAllOrganizations',
+        dataType: 'json',
+        processResults: function (data) {
+          return {
+            results: $.map(data, function(obj) {
+              return { id: obj.id, text: obj.name };
+            })
+          };
+        }
+        // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+      }
+    });
+    
+
+$('#announcement-list').dataTable({
+  pageLength: 25,
+  lengthMenu: [[2, 5,10, 25, 50, -1], [2, 5, 10, 25, 50, "Tümü"]],
+  processing: true,
+  serverSide: true,
+  ordering: true,
+  paging: true,
+  pagingType: "full_numbers",
+  rowId: 'id',
+
+  language: {
+    "search": "Ara:",
+    "info": "Toplam _TOTAL_ kayıttan  _END_  kayıt gösteriliyor",
+    "paginate": {
+      "first": "İlk",
+      "last": "Son",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "aria": {
+      "sortAscending":  ": activate to sort column ascending",
+      "sortDescending": ": activate to sort column descending"
+    }
+  },
+  columns: [
+    { data: 'title', title:"Başlık", width: '20%' },
+    { data: 'date', title:"Duyuru Tarihi", width: '20%'},
+    {data: null, title:"İşlem", render: function ( data, type, row ) {
+      return ` <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Edit "  onClick="editAnnouncement(${row.id})"><i class="fas fa-edit"></i></a>
+               <a href="javascript:void(0)" class="btn btn-default btn-xs icon-btn md-btn-flat product-tooltip" title="Remove" onClick="deleteAnnouncement(${row.id})"><i class="fas fa-trash-alt"></i></a>`
+    }},
+  ],
+  "ajax":{
+    type: "POST",
+    url: '/announcement/GetAnnouncements',
+  },
+
+});
+    
+
+$('#edit-bs-markdown').markdown({
+  parser: convertFunction, // or whatever,
+  iconlibrary: 'fa',
+additionalButtons: [
+  [{
+        name: "groupCustom",
+        data: [{
+          name: "underline",
+          toggle: true, // this param only take effect if you load bootstrap.js
+          title: "Altı Çizili",
+          icon: "fas fa-underline",
+          callback: function(e){
+            let selected = e.getSelection();
+            e.replaceSelection("<u>" + selected.text + "</ul>");
+            e = null;
+
+          }
+        },
+        {
+          name: "center",
+          icon: "fas fa-align-center",
+          toggle: true,
+          title: "Ortala",
+            callback: function(e){
+              let selected = e.getSelection();
+              e.replaceSelection("<center>" + selected.text + "</center>");
+              e = null;
+
+            }
+        },
+        {
+          name: "link",
+          icon: "fas fa-link",
+          toggle: true,
+          title: "Link",
+            callback: function(e){
+               var url = prompt("Please enter your name");
+              let selected = e.getSelection();
+              e.replaceSelection("[" + selected.text + "](" + url + ")");
+              e = null;
+
+            }
+        },
+        {
+          name: "imageupload",
+          icon: "fas fa-images",
+          toggle: true,
+          title: "Resim Yükle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`![](${data} =100x200)`);
+                       // e.replaceSelection(`<img src="${data}" style="width:650px; height;800px;"`)
+
+                        e = null;
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+          name: "fileupload",
+          icon: "fas fa-book",
+          toggle: true,
+          title: "Döküman Ekle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`  <iframe src="https://docs.google.com/viewer?url=${data}&embedded=true"  style="height: 800px; width: 600px;" class="iframe-responsive"></iframe>`);
+                        e = null;
+
+                        },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+            name: "youtube",
+            icon: "fab fa-youtube-square",
+            toggle: true,
+            title: "Youtube",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe width="560" height="315" src="${selected.text.replace('watch?v=', 'embed/')}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+                  e = null;
+
+                }
+        },
+        {
+            name: "drive",
+            icon: "fab fa-google-drive",
+            toggle: true,
+            title: "Drive",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe src="${selected.text.replace('/view?usp=sharing', '/preview')}" width="640" height="480"></iframe>`);
+                }
+        }
+
+        ]
+  }]
+]
+});    
+$('#bs-markdown').markdown({
+  parser: convertFunction, // or whatever,
+  iconlibrary: 'fa',
+additionalButtons: [
+  [{
+        name: "groupCustom",
+        data: [{
+          name: "underline",
+          toggle: true, // this param only take effect if you load bootstrap.js
+          title: "Altı Çizili",
+          icon: "fas fa-underline",
+          callback: function(e){
+            let selected = e.getSelection();
+            e.replaceSelection("<u>" + selected.text + "</ul>");
+          }
+        },
+        {
+          name: "center",
+          icon: "fas fa-align-center",
+          toggle: true,
+          title: "Ortala",
+            callback: function(e){
+              let selected = e.getSelection();
+              e.replaceSelection("<center>" + selected.text + "</center>");
+            }
+        },
+        {
+          name: "link",
+          icon: "fas fa-link",
+          toggle: true,
+          title: "Link",
+            callback: function(e){
+               var url = prompt("Please enter your name");
+              let selected = e.getSelection();
+              e.replaceSelection("[" + selected.text + "](" + url + ")");
+            }
+        },
+        {
+          name: "imageupload",
+          icon: "fas fa-images",
+          toggle: true,
+          title: "Resim Yükle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`![](${data} =800x*)`);
+                        //e.replaceSelection(`<img src="${data}" style="width:650px; height;800px;" />`)
+
+                        e = null;
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+          name: "fileupload",
+          icon: "fas fa-book",
+          toggle: true,
+          title: "Döküman Ekle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`  <iframe src="https://docs.google.com/viewer?url=${data}&embedded=true"  style="height: 800px;width: 600px" class="iframe-responsive"></iframe>`);
+                        e = null;
+
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+            name: "youtube",
+            icon: "fab fa-youtube-square",
+            toggle: true,
+            title: "Youtube",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe width="560" height="315" src="${selected.text.replace('watch?v=', 'embed/')}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+                   e = null;
+                }
+        },
+        {
+            name: "drive",
+            icon: "fab fa-google-drive",
+            toggle: true,
+            title: "Drive",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe src="${selected.text.replace('/view?usp=sharing', '/preview')}" width="640" height="480"></iframe>`);
+                  e = null;
+                }
+        }
+
+        ]
+  }]
+]
+});
+    </script>
+}

@@ -1,0 +1,90 @@
+﻿@using System.Security.Claims
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Sinav.Web
+@section styles
+{
+  <link rel="stylesheet" href="~/assets/libs/select2/select2.css">
+  <link rel="stylesheet" href="~/assets/libs/datatables/datatables.css" />
+}
+
+@{
+    var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+
+<div class="row">
+
+    <div class="col-md-12">
+        <div class="card">
+          <div class="card-datatable table-responsive">
+            <div class="card-datatable table-responsive">
+              <table id="leaderboard" class="table table-striped table-bordered">
+
+              </table>
+            </div>
+          </div>
+        </div>
+
+    </div>
+    
+    
+    
+  
+    <div class="col-md-12">
+        <field-subjects user-id="@userId"></field-subjects>
+
+    </div>
+  
+
+
+</div>
+
+
+
+
+@section scripts
+{
+    <script src="~/assets/libs/datatables/datatables.js"></script>
+
+  <script>
+
+
+ $('#leaderboard').dataTable({
+  pageLength: 5,
+  lengthMenu: [[2, 5,10, 25, 50, -1], [2, 5, 10, 25, 50, "Tümü"]],
+  processing: true,
+  serverSide: true,
+  ordering: true,
+  paging: true,
+  searchDelay: 1000,
+  pagingType: "full_numbers",
+  rowId: 'id',
+
+  language: {
+    "search": "Ara:",
+    "info": "Toplam _TOTAL_ kayıttan  _END_  kayıt gösteriliyor",
+    "paginate": {
+      "first": "İlk",
+      "last": "Son",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "aria": {
+      "sortAscending":  ": activate to sort column ascending",
+      "sortDescending": ": activate to sort column descending"
+    }
+  },
+  columns: [
+    { data: 'userName', title:"Kullanıcı", width: '20%' },
+    { data: 'score', title:"Puan", width: '20%' },
+
+  ],
+  "ajax":{
+    type: "POST",
+    url: '/pdf/GetLeaderboardResult?slug='+ "@ViewBag.Slug",
+  },
+
+});
+    </script>
+}

@@ -1,0 +1,476 @@
+﻿@{ Layout = "_Layout";}
+
+@using Sinav.Web.Helpers
+@{
+
+    List<Sinav.Data.Models.Subject> subjects = ViewBag.Subjects as List<Sinav.Data.Models.Subject>;
+}
+
+@section styles
+{
+  <link rel="stylesheet" href="~/assets/libs/bootstrap-markdown/bootstrap-markdown.css" />
+    <link rel="stylesheet" href="~/assets/css/toastr.min.css" />
+
+}
+
+<form id="image-form">
+<input id="file-input" type="file" name="file" style="display: none;" />
+
+</form>
+
+
+
+<form id="add-question-form" method="post" enctype="multipart/form-data">
+<div style="width: 500px;margin: 0 auto;">
+@Html.Raw(SubjectTreeHelper.TreeviewHelper(subjects))
+
+</div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLiveLabel">Yeni Soru</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <textarea id="bs-markdown"  data-provide="markdown" rows="10"></textarea>
+          <input type="text" id="content" hidden name="content"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">A</label>
+          <input type="text" class="form-control mb-1"  name="a1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">B</label>
+          <input type="text" class="form-control mb-1"  name="a2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">C</label>
+          <input type="text" class="form-control mb-1"  name="a3">
+        </div>
+        <div class="form-group">
+          <label class="form-label">D</label>
+          <input type="text" class="form-control mb-1"  name="a4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E</label>
+          <input type="text" class="form-control mb-1"  name="a5">
+        </div>
+        <hr/>
+        <h5>Doğru Cevap</h5>
+        <div class="custom-controls-stacked">
+          <label class="custom-control custom-radio answer">
+            <input name="answer" type="radio" class="custom-control-input" value="a1" >
+            <span class="custom-control-label">A</span>
+          </label>
+          <label class="custom-control custom-radio answer">
+            <input name="answer" type="radio" class="custom-control-input" value="a2">
+            <span class="custom-control-label">B</span>
+          </label>
+          <label class="custom-control custom-radio answer">
+            <input name="answer" type="radio" class="custom-control-input" value="a3">
+            <span class="custom-control-label">C</span>
+          </label>
+          <label class="custom-control custom-radio answer">
+            <input name="answer" type="radio" class="custom-control-input" value="a4">
+            <span class="custom-control-label">D</span>
+          </label>
+          <label class="custom-control custom-radio answer">
+            <input name="answer" type="radio" class="custom-control-input" value="a5">
+            <span class="custom-control-label">E</span>
+          </label>
+          
+        </div>
+          <div style="display: inline-block; width: 500px;" class="explanation">
+            <div class="form-group">
+              <textarea id="explanation-bs-markdown"   data-provide="markdown" rows="10"></textarea>     
+                        <input type="text" id="explanation" hidden name="explanation"/>
+  
+              </div>                   
+          </div>
+          <div style="display: inline-block; width: 500px;" >
+            <div class="form-group">
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="cikmissoru">
+                <div class="form-check-label">
+                  Çıkmış Soru
+                </div>
+              </label>
+            </div>
+  
+          </div>
+        
+      </div>
+      <div class="modal-footer">
+        <span class="text-info"><i class="fas fa-info-circle" style="position: absolute;left: 15px;" data-toggle="popover" data-placement="left" data-content="Yukarıda bulunan kutuya soruyu yazdıktan sonra aşağıda bulunan metin kutularına şıkları yazınız. Daha sonra 'Doğru Cevap' kısmından doğru şıkkı seçin. Eğer anonim olarak gönder seçeneğini işaretlerseniz soruyu çözen diğer kullanıcılar sorunun kim tarafından gönderildiğini göremeyeceklerdir. Gönder butonuna basıldıktan sonra soru eğer yönetici tarafından onaylanırsa yayınlanacaktır. Yönetici soru içeriğinde değişiklik yapabilir." title="" data-original-title="Soru Gönderme">Yardım</i></span>
+        <label class="switcher" data-toggle="tooltip" data-placement="top" title="" data-original-title="Soru Yayınlandığında Adınız Gözükmez">
+          <input type="checkbox" class="switcher-input" name="anonym">
+          <span class="switcher-indicator">
+            <span class="switcher-yes">
+              <i class="fas fa-check"></i>
+            </span>
+            <span class="switcher-no">
+              <i class="fas fa-times"></i>
+            </span>
+          </span>
+          <span  class="switcher-label text-muted">Anonim olarak gönder.</span>
+        </label>
+        
+        <button type="submit" id="submit-question-form" class="btn btn-primary">Gönder</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+
+
+@section scripts
+{
+  <script src="~/assets/libs/bootstrap-markdown/bootstrap-markdown.js"></script>
+  <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+    <script src="~/assets/js/toastr.min.js"></script>
+
+  <script>
+
+  function addNewQuestionToSubTopic(topicId ){
+      $('#document-modal').modal();
+      $('#add-question-form').append(`<input type="text" name="subTopicId"  value="${topicId}" />`);
+      
+  }
+  
+
+  
+  $("#add-question-form").submit(function(e) {
+    e.preventDefault();    
+    let submitButton = document.getElementById('submit-question-form');
+    submitButton.disabled = true;
+    submitButton.innerHTML += `<span class="spinner-border ml-1" role="status" aria-hidden="true"></span>`;
+      $('#content').val($('#bs-markdown').data('markdown').parseContent());
+       $('#explanation').val($('#explanation-bs-markdown').data('markdown').parseContent());
+      let formData = new FormData(this);
+      console.log(formData);
+      $.ajax({
+          url: '/question/sendquestion',
+          type: 'POST',
+          data: formData,
+          success: function (data) {
+              toastr.success("Soru Gönderildi", "Yeni Soru", {
+                positionClass:     "toast-top-right",
+                closeButton:       true,
+                progressBar:       true,
+                preventDuplicates: true,
+                newestOnTop:       true
+              });
+              submitButton.disabled = false;
+              $(submitButton).children(0).remove()
+          },
+          error: function (data){
+              toastr.error(data, "HATA", {
+                positionClass:     "toast-top-right",
+                closeButton:       true,
+                progressBar:       true,
+                preventDuplicates: true,
+                newestOnTop:       true
+              });
+              submitButton.disabled = false;
+              $(submitButton).children(0).remove()
+          },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+  });
+
+
+
+
+
+    var myext = function () {
+    var myext1 = {
+       type:    'lang',
+       regex:   '=\\!\\[\\]\\((.* )=([0-9]{1,4})x([0-9]{1,4})\\)',
+       replace: function (m, $1, $2, $3) {
+           
+           m.replace(alt, "");
+           return `<img src="${$1}" style="width:${$2}px;height:${$3}px" />  `
+       }
+    }
+    
+    return [myext1];
+    }
+
+
+        
+let converter = new showdown.Converter({extensions: [myext()]});
+let convertFunction = converter.makeHtml.bind(converter);
+
+$('#explanation-bs-markdown').markdown({
+  parser: convertFunction, // or whatever,
+  iconlibrary: 'fa',
+additionalButtons: [
+  [{
+        name: "groupCustom",
+        data: [{
+          name: "underline",
+          toggle: true, // this param only take effect if you load bootstrap.js
+          title: "Altı Çizili",
+          icon: "fas fa-underline",
+          callback: function(e){
+            let selected = e.getSelection();
+            e.replaceSelection("<u>" + selected.text + "</ul>");
+            e = null;
+
+          }
+        },
+        {
+          name: "center",
+          icon: "fas fa-align-center",
+          toggle: true,
+          title: "Ortala",
+            callback: function(e){
+              let selected = e.getSelection();
+              e.replaceSelection("<center>" + selected.text + "</center>");
+              e = null;
+
+            }
+        },
+        {
+          name: "link",
+          icon: "fas fa-link",
+          toggle: true,
+          title: "Link",
+            callback: function(e){
+               var url = prompt("Please enter your name");
+              let selected = e.getSelection();
+              e.replaceSelection("[" + selected.text + "](" + url + ")");
+              e = null;
+
+            }
+        },
+        {
+          name: "imageupload",
+          icon: "fas fa-images",
+          toggle: true,
+          title: "Resim Yükle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`![](${data} =100x200)`);
+                       // e.replaceSelection(`<img src="${data}" style="width:650px; height;800px;"`)
+
+                        e = null;
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+          name: "fileupload",
+          icon: "fas fa-book",
+          toggle: true,
+          title: "Döküman Ekle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`  <iframe src="https://docs.google.com/viewer?url=https://bmskariyer.com${data}&embedded=true"  style="width:600px;height: 800px"></iframe>`);
+                        e = null;
+
+                        },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+            name: "youtube",
+            icon: "fab fa-youtube-square",
+            toggle: true,
+            title: "Youtube",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe width="560" height="315" src="${selected.text.replace('watch?v=', 'embed/')}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+                  e = null;
+
+                }
+        },
+        {
+            name: "drive",
+            icon: "fab fa-google-drive",
+            toggle: true,
+            title: "Drive",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe src="${selected.text.replace('/view?usp=sharing', '/preview')}" width="640" height="480"></iframe>`);
+                  e = null;
+
+                }
+        }
+
+        ]
+  }]
+]
+});    
+$('#bs-markdown').markdown({
+  parser: convertFunction, // or whatever,
+  iconlibrary: 'fa',
+additionalButtons: [
+  [{
+        name: "groupCustom",
+        data: [{
+          name: "underline",
+          toggle: true, // this param only take effect if you load bootstrap.js
+          title: "Altı Çizili",
+          icon: "fas fa-underline",
+          callback: function(e){
+            let selected = e.getSelection();
+            e.replaceSelection("<u>" + selected.text + "</ul>");
+          }
+        },
+        {
+          name: "center",
+          icon: "fas fa-align-center",
+          toggle: true,
+          title: "Ortala",
+            callback: function(e){
+              let selected = e.getSelection();
+              e.replaceSelection("<center>" + selected.text + "</center>");
+            }
+        },
+        {
+          name: "link",
+          icon: "fas fa-link",
+          toggle: true,
+          title: "Link",
+            callback: function(e){
+               var url = prompt("Please enter your name");
+              let selected = e.getSelection();
+              e.replaceSelection("[" + selected.text + "](" + url + ")");
+              e = null;
+
+            }
+        },
+        {
+          name: "imageupload",
+          icon: "fas fa-images",
+          toggle: true,
+          title: "Resim Yükle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`![](${data} =800x*)`);
+                        //e.replaceSelection(`<img src="${data}" style="width:650px; height;800px;" />`)
+
+                        e = null;
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+          name: "fileupload",
+          icon: "fas fa-book",
+          toggle: true,
+          title: "Döküman Ekle",
+            callback: function(e){
+              $('#file-input').trigger('click');
+              $('#file-input').on('input', function() {
+                  var formData = new FormData(document.getElementById('image-form'));
+
+                  $.ajax({
+                    url: "/upload",
+                    data: formData,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                      console.log(data);
+                        //let selected = e.getSelection();
+                        e.replaceSelection(`  <iframe src="https://docs.google.com/viewer?url=https://bmskariyer.com${data}&embedded=true"  style="width:600px;height: 800px"></iframe>`);
+                        e = null;
+
+                    },
+                    error: function(data) {
+                      console.log(data);
+                    }
+                  })
+              });
+              let selected = e.getSelection();
+            }
+        },
+        {
+            name: "youtube",
+            icon: "fab fa-youtube-square",
+            toggle: true,
+            title: "Youtube",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe width="560" height="315" src="${selected.text.replace('watch?v=', 'embed/')}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+                   e = null;
+                }
+        },
+        {
+            name: "drive",
+            icon: "fab fa-google-drive",
+            toggle: true,
+            title: "Drive",
+                callback: function(e){
+                  let selected = e.getSelection();
+                  e.replaceSelection(`<iframe src="${selected.text.replace('/view?usp=sharing', '/preview')}" width="640" height="480"></iframe>`);
+                  e = null;
+                }
+        }
+
+        ]
+  }]
+]
+});
+</script>
+
+}

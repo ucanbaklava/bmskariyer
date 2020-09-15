@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Logging" />
+      <Folder Include="Middlewares" />
+      <Folder Include="wwwroot\assets\docs" />
+      <Folder Include="wwwroot\assets\documents" />
+      <Folder Include="wwwroot\assets\images\kurumlar" />
+      <Folder Include="wwwroot\assets\images\users" />
+      <Folder Include="wwwroot\assets\pdftests" />
+      <Folder Include="wwwroot\assets\temp" />
+      <Folder Include="wwwroot\assets\uploads" />
+      <Folder Include="wwwroot\js" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Sinav.Business\Sinav.Business.csproj" />
+      <ProjectReference Include="..\Sinav.Data\Sinav.Data.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="3.1.0" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="3.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Views\Question\QuestionsByOrganization.cshtml">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+      <Content Update="Views\Announcement\Index.cshtml">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+      <Content Update="Views\Announcement\Announcement.cshtml">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,66 @@
+@{ Layout = "_AccountLayout ";}
+@model Sinav.Web.DTOs.UserLoginDTO
+
+<div class="authentication-wrapper authentication-4 px-4">
+    <div class="authentication-inner py-5">
+
+      <!-- Logo -->
+      <div class="d-flex justify-content-center align-items-center mb-5">
+        <div class="ui-w-60">
+          <div class="w-100 position-relative" style="padding-bottom: 54%">
+            <a href="/anasayfa"><img class="h-100" style="margin:0 auto; transform: translateX(-50px);" width="160px"  src="~/assets/images/logo.png" /></a>
+          </div>
+        </div>
+      </div>
+      <!-- / Logo -->
+
+      <div class="card">
+        <div class="row no-gutters row-bordered">
+
+          <!-- Login -->
+          <div class="col-md-12">
+            <a href="/kayit" class="btn btn-primary float-right mt-2 mr-2" type="button">Kayıt Ol</a>
+            <h5 class="text-center text-muted font-weight-normal py-4 px-4 px-sm-5 m-0">Giriş Yap</h5>
+            <hr class="border-light m-0">
+            <ul>
+                @foreach (var error in ViewData.ModelState.SelectMany(x => x.Value.Errors))
+                {
+                    <li>@Html.Raw(error.ErrorMessage)</li>
+                }
+            </ul>
+            <div class="px-4 px-sm-5 pt-4 pb-5 pb-sm-5">
+              <!-- Login form -->
+              <form asp-action="login" asp-controller="Account" type="post">
+                <div class="form-group">
+                  <label class="form-label" asp-for="Email">Email</label>
+                  <input type="text" class="form-control" asp-for="Email">
+                </div>
+                <div class="form-group">
+                  <label class="form-label d-flex justify-content-between align-items-end">
+                    <div>Şifre</div>
+                    <a href="/sifre-sifirlama" class="d-block small">Şifremi Unuttum</a>
+                  </label>
+                  <input type="password" class="form-control" asp-for="Password">
+                </div>
+                <div class="d-flex justify-content-between align-items-center m-0">
+
+                  <button class="btn btn-primary" type="submit">Giriş</button>
+                </div>
+              </form>
+              <!-- / Login form -->
+
+            </div>
+          </div>
+          <!-- / Login -->
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+@section styles
+{
+  <link rel="stylesheet" href="~/assets/css/pages/authentication.css" class="theme-settings-appwork-css">
+}
+

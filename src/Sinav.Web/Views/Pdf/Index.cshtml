@@ -1,0 +1,286 @@
+﻿@{ Layout = "_Layout";}
+@section styles
+{
+    <link rel="stylesheet" href="~/assets/libs/sweetalert2/sweetalert2.css"/>
+
+
+  <style>
+  .test-container{
+  
+  }
+
+      input[type='radio']:after {
+          width: 25px;
+          height: 25px;
+          position: relative;
+          background-color: #d1d3d1;
+          content: '';
+          display: inline-block;
+          visibility: visible;
+          border: 2px solid white;
+      }
+        input[type='radio'].right-answer:after {
+            width: 25px;
+            height: 25px;
+            position: relative;
+            background-color: green;
+            content: '';
+            display: inline-block;
+            visibility: visible;
+            border: 2px solid white;
+        }
+        input[type='radio']:checked:after {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            top: -2px;
+            left: -1px;
+            position: relative;
+            background-color: cadetblue;
+            content: '';
+            display: inline-block;
+            visibility: visible;
+            border: 2px solid white;
+        }
+        input[type='radio'].correct:checked:after {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            top: -2px;
+            left: -1px;
+            position: relative;
+            background-color: green;
+            content: '';
+            display: inline-block;
+            visibility: visible;
+            border: 2px solid white;
+        }
+        input[type='radio'].wrong:checked:after {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            top: -2px;
+            left: -1px;
+            position: relative;
+            background-color: crimson;
+            content: '';
+            display: inline-block;
+            visibility: visible;
+            border: 2px solid white;
+        }
+        input[type='radio'].empty:after {
+            width: 25px;
+            height: 25px;
+            position: relative;
+            background-color: green;
+            content: '';
+            display: inline-block;
+            visibility: visible;
+            border: 2px solid white;
+        }
+        .answer{
+            width: 250px;
+        }
+        .answer .choices{
+            display: inline;
+            padding-left: 10px;
+        }
+        .answer-label{
+            position: absolute;
+            color: #fff;
+            font-weight: 700;
+            left: 7px;
+            top: 4px;
+        }
+  </style>
+}
+@section scripts
+{
+          <script src="~/assets/libs/sweetalert2/sweetalert2.js"></script>
+
+    <script>  
+    let asd;
+    let t;
+     $(document).on('click', 'input[name^="q"]', function() {
+             $('#user-answer-count').text($("input[name^='q' ][value != 'x']:checked").length);
+    });
+
+$("#answer-box").submit(function(e) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'Testi bitirmek istediğinize emin misiniz?',
+        text: "Testi sonlandırdıktan sonra cevaplara müdahale edemezsiniz",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "Teste Devam Et",
+        confirmButtonText: 'Testi Bitir'
+    }).then((result) => {
+        if (result.value) {
+            let a = $('#answer-box').serialize();
+            let answers = a.replace(/[q][\d]?[\d]?[\d][=]/g, "");
+            answers = answers.replaceAll("&", ",");
+            console.log(typeof(answers))
+            $.ajax({
+                type: "POST",
+                url: "/pdf/SubmitTest",
+                data: {
+                    "Slug": "@ViewBag.Slug",
+                    "Answers": answers
+                },
+                success: function(data) {
+                    for (i = 1; i <= data.user.length; i++) {
+                        let userAnswer = $(`input[name=q${i}]:checked`);
+                        if (userAnswer.val() === "x"){
+                            t = $(`input[name=q${i}][value=${data.right[i-1].toLowerCase()}]`)[0];
+                            $(t).toggleClass("empty");
+                            $(`#q-result${i}`).append(`<i class="fas fa-circle" style="margin-right: 10px;color: darkblue;"></i>`)
+
+                        }
+                        if (userAnswer.val() === data.right[i - 1].toLowerCase()) {
+                            $(`input[name=q${i}]:checked`).toggleClass("correct")
+                            $(`#q-result${i}`).append(`<i class="fas fa-check-circle" style="margin-right: 10px;color: green;"></i>`)
+
+                        } else if(userAnswer.val() !== data.right[i-1].toLowerCase() && userAnswer.val() !== "x") {
+                            $(`input[name=q${i}]:checked`).toggleClass("wrong");
+                            $(`#q-result${i}`).append(`<i class="fas fa-times-circle" style="margin-right: 10px;color: red;"></i>`)
+
+                            t = $(`input[name=q${i}][value=${data.right[i-1].toLowerCase()}]`)[0];
+                            $(t).toggleClass("right-answer");
+
+                            $(`[name=q${i}][value=${data.right[i-1].toLowerCase()}]`).toggleClass("correct")
+                        }
+
+                    }
+                    Swal.fire({
+                        title: 'Test Sonucu',
+                        text: `${data.questionCount} soruda ${data.correctAnswerCount} doğru - ${data.questionCount - (data.correctAnswerCount + data.emptyAnswerCount)} yanlış - ${data.emptyAnswerCount} boş `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Kapat'
+                    })
+                    $("#answer-box input").prop("disabled", true);
+                    $("#answer-box button").prop("disabled", true);
+                    $("#correct-answer-count").html(data.correctAnswerCount);                  
+                    $("#wrong-answer-count").html(data.questionCount - (data.correctAnswerCount + data.emptyAnswerCount));
+                    $("#empty-answer-count").html(data.emptyAnswerCount);
+
+                },
+                error: function(data) {
+                    console.log("hata")
+                }
+            })
+        }
+    });
+})
+        
+        $.ajax({
+            url: '/pdf/getquiz',
+            type: 'GET',
+            data: {"slug": "@ViewBag.Slug"},
+            success:function(data) {
+                $('#q-count')[0].innerText = data.questionCount
+              $('#pdf').append(`<embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=https://bmskariyer.com/${data.pdfPath}" style="width:100%; height:85vh;">`);
+              for (i=1; i<=data.questionCount; i++){
+                $('#answer-box').append(`<div class="answer">
+                                                    <div class="d-inline" style="width: 30px;">
+                                                        <span id="q-result${i}"></span>
+                                                        <span class="d-inline-block" style="width: 30px;">${i}:</span>
+                                                     </div>
+
+                                                    <div class="choices">
+                                                           <label class="form-check form-check-inline">
+                                                             <input class="form-check-input" type="radio" name="q${i}" value="a">
+                                                             <span class="form-check-label answer-label">
+                                                               A
+                                                             </span>
+                                                           </label>
+                                                           
+                                         <label class="form-check form-check-inline">
+                                                             <input class="form-check-input" type="radio" name="q${i}" value="b">
+                                                             <span class="form-check-label answer-label">
+                                                               B
+                                                             </span>
+                                                           </label>
+                                         <label class="form-check form-check-inline">
+                                                             <input class="form-check-input" type="radio" name="q${i}" value="c">
+                                                             <span class="form-check-label answer-label">
+                                                               C
+                                                             </span>
+                                                           </label>
+                                         <label class="form-check form-check-inline">
+                                                             <input class="form-check-input" type="radio" name="q${i}" value="d">
+                                                             <span class="form-check-label answer-label">
+                                                               D
+                                                             </span>
+                                                           </label>
+                                         <label class="form-check form-check-inline">
+                                                             <input class="form-check-input" type="radio" name="q${i}" value="e">
+                                                             <span class="form-check-label answer-label">
+                                                               E
+                                                             </span>
+                                                           </label>
+
+                                                        </div>
+
+                                                           
+                                                         </div>
+                                                            <input class="form-check-input" type="radio" name="q${i}" value="x" hidden checked> 
+
+                                                 </div>`)
+              }
+            },
+            error: function(data) {
+              console.log("adssasdsa")
+            }}
+        )
+    </script>
+}
+
+
+<div class="test-container">
+
+    <div id="pdf" style="display: inline-block; height: 80vh;" class="col-md-12 col-sm-12 col-lg-8"></div>
+
+    <div class="col-lg-4" style="display: grid;overflow: scroll; overflow-x: hidden;float: right; height: 80vh;">
+        <div class="card mb-3">
+                          <!-- Add `.with-elements` to the parent `.card-header` element -->
+                          <div class="card-header with-elements">
+                            <span class="card-header-title mr-2">Cevap Anahtarı</span>
+                            <div class="card-header-elements">
+                              <span class="badge badge-outline-success"  id="q-count"></span>&nbsp;/&nbsp;
+                              <span class="badge badge-primary badge-pill" id="user-answer-count">0</span>
+                            </div>
+                            <div class="card-header-elements ml-md-auto">
+                                <span class="badge badge-success" id="correct-answer-count" style="
+                                width: 23px;
+                                ">D</span>
+                                <span class="badge badge-danger" id="wrong-answer-count" style="
+                                width: 23px;
+                                ">Y</span>
+                                <span class="badge" id="empty-answer-count" style="width: 23px;background-color: darkblue;color: #fff;">B</span>
+                                <button type="button" onclick="$('#answer-box').submit()" class="btn btn-primary">Testi Bitir</button>
+                            </div>
+                            <div class="card-header-elements ml-md-auto">
+                                <span class="badge badge-success" id="correct-answer-count"></span>
+                                <span class="badge badge-danger" id="wrong-answer-count"></span>
+                            <span class="badge" id="empty-answer-count" style="background-color: darkblue; color: #fff"></span>
+
+                            </div>
+                          </div>
+                          <div class="card-body">
+                                      <form id="answer-box" style="height: 60vh;">
+                              
+                              
+                                      </form>
+
+                          </div>
+                        </div>
+
+
+    </div>
+
+</div>

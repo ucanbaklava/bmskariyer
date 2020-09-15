@@ -1,0 +1,338 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Sinav.Data.Context
+
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@inject SignInManager<AppUser> SignInManager
+@{
+
+
+  // get some claim by type
+  //var orgName = HttpContextAccessor.HttpContext.Request.Cookies["org"];
+  var orgName = HttpContextAccessor.HttpContext.Response.HttpContext.Session.GetString("kurum");
+  var avatar = HttpContextAccessor.HttpContext.Response.HttpContext.Session.GetString("avatar");
+  var orgLogo = HttpContextAccessor.HttpContext.Response.HttpContext.Session.GetString("kurumLogo");
+  var name = HttpContextAccessor.HttpContext.Response.HttpContext.Session.GetString("ad");
+
+
+}
+<!DOCTYPE html>
+
+<html lang="tr" class="light-style">
+<head>
+  <link rel="icon" href="~/assets/images/logo.png">
+
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+  <title>@ViewBag.Title</title>
+
+   <link rel="stylesheet" href="~/assets/fonts/fontawesome.css">
+
+
+
+  <environment include="Production">
+    <link rel="stylesheet" href="~/assets/css/site.min.css" asp-append-version="true" />
+    </environment>
+  <style>
+.ls-none{
+    list-style: none;
+    padding: 5px;
+    color: crimson;
+    font-weight: 900;
+}
+.answer{
+    float: left;
+
+}
+
+.sidenav-user-info{
+    position: absolute;
+    width: 100%;
+    bottom: 0%;
+}
+
+.sidenav-user-info img{
+    width: 100%;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    
+}
+.sidenav-item a{
+    font-weight: bold;
+}
+@@media (max-width: 576px) { 
+    .img-responsive{
+          width: 100% !important;
+          height: auto !important;
+    }
+    .iframe-responsive{
+        height: 800px;
+        border: none;
+        width: 100% !important;
+    }
+}
+
+</style>
+  <!-- Load polyfills -->
+  <script src="~/assets/js/polyfills.js"></script>
+  <script>document['documentMode']===10&&document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=Intl.~locale.en"><\/script>')</script>
+
+  <!-- Layout helpers -->
+  <script src="~/assets/js/layout-helpers.js"></script>
+
+  <!-- Libs -->
+
+  <!-- `perfect-scrollbar` library required by SideNav plugin -->
+  <link rel="stylesheet" href="~/assets/js/perfect-scrollbar/perfect-scrollbar.css">
+  @RenderSection("styles", false)
+
+</head>
+<body>
+
+  <!-- Layout wrapper -->
+  <div class="layout-wrapper layout-1">
+    <!-- Layout inner -->
+    <div class="layout-inner">
+
+      <!-- Layout navbar -->
+      <nav class="layout-navbar navbar navbar-expand-lg align-items-lg-center bg-navbar-theme container-p-x" id="layout-navbar">
+        <div class="app-brand demo">
+          <span class="app-brand-logo demo">
+              <a href="/anasayfa" class="navbar-brand"><img src="/assets/images/logo.png" style="
+                                                                    width: 60px;
+                                                                "></a>
+
+          </span>
+          <a href="javascript:void(0)" class="layout-sidenav-toggle sidenav-link text-large ml-auto">
+            <i class="ion ion-md-menu align-middle"></i>
+          </a>
+        </div>
+        
+        <a href="/anasayfa" class="navbar-brand">Büro Memur-Sen</a>
+
+        <!-- Sidenav toggle -->
+        <div class="layout-sidenav-toggle navbar-nav align-items-lg-center mr-auto mr-lg-4">
+          <a class="nav-item nav-link px-0 ml-2" href="javascript:void(0)">
+            <i class="fas fa-bars"></i>
+            <!-- <i class="ion ion-md-menu text-large align-middle"></i>-->
+          </a>
+        </div>
+
+        <!-- Navbar toggle -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#layout-navbar-collapse">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        
+
+        @if (SignInManager.IsSignedIn(User))
+        {
+          <div class="navbar-collapse collapse" id="layout-navbar-collapse">
+                    <img src="~/assets/images/ustbanner.png" style="margin: 0 auto; width: 60%;" />
+
+            <div class="navbar-nav align-items-lg-center ml-auto">
+              <div class="demo-navbar-user nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
+                  <span class="d-inline-flex flex-lg-row-reverse align-items-center align-middle">
+                    <img src="@(avatar ?? "/assets/images/anonymous.png")" alt="" class="d-block ui-w-30 rounded-circle">
+                    <span class="px-1 mr-lg-2 ml-2 ml-lg-0">@name?.ToUpper()</span>
+                  </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <a href="/ayarlar" class="dropdown-item"><i class="far fa-id-card"></i> &nbsp; Hesabım</a>
+                  <div class="dropdown-divider"></div>
+                  <a href="javascript:void(0)" onclick="document.getElementById('logout-form').submit();" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> &nbsp;Oturumu Kapat</a>
+                  @if (User.Identity.IsAuthenticated)
+                  {
+                    <form id="logout-form" method="post" asp-controller="Account" asp-action="LogOut" hidden>
+                      <input type="submit" value="Logout"/>
+                    </form>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </nav>
+      <!-- / Layout navbar -->
+
+      <div class="layout-container">
+
+      @if (User.Identity.IsAuthenticated)
+      {
+        
+
+        <!-- Layout sidenav -->
+        <div id="layout-sidenav" class="layout-sidenav sidenav sidenav-vertical bg-sidenav-theme">
+          <ul class="sidenav-inner py-1">
+            <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Home") ? "active" : "")">
+              <a href="/anasayfa" class="sidenav-link"><i class="sidenav-icon fas fa-home"></i><div>Anasayfa</div></a>
+            </li>
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "Settings" ? "active" : "")">
+              <a href="/ayarlar" class="sidenav-link"><i class="sidenav-icon fas fa-user-cog"></i><div>Hesabım</div></a>
+            </li>
+            <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "QuestionsByOrganization" && ViewContext.RouteData.Values["controller"].ToString() == "Question" ) ? "active" : "")">
+              <a href="/soru/alan-sorulari" class="sidenav-link"><i class="sidenav-icon fas fa-file-alt"></i><div>Alan Soruları (Karışık)</div></a>
+            </li>
+            <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "CommonQuestions" && ViewContext.RouteData.Values["controller"].ToString() == "Question" ) ? "active" : "")">
+              <a href="/soru/alan-disi-sorular" class="sidenav-link"><i class="sidenav-icon fas fa-file-alt"></i><div>Alan Dışı Sorular (Karışık)</div></a>
+            </li>
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "SendQuestion" ? "active" : "")">
+              <a href="/soru-gonder" class="sidenav-link"><i class="sidenav-icon fas fa-file-alt"></i><div>Soru Gönder</div></a>
+            </li>
+            @if (User.IsInRole("admin"))
+            {
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Announcement") ? "active" : "")">
+                <a href="/duyurular" class="sidenav-link"><i class="sidenav-icon fas fa-file-alt"></i><div>Duyurular</div></a>
+              </li>
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "ListUsers" ? "active" : "")">
+                <a href="/tum-kullanicilar" class="sidenav-link"><i class="sidenav-icon fas fa-users"></i><div>Tüm Kullanıcılar</div></a>
+              </li>
+       
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "SentQuestions" ? "active" : "")">
+                <a href="/soru/gonderilen-sorular" class="sidenav-link"><i class="sidenav-icon fas fa-envelope"></i><div>Gönderilen Sorular</div></a>
+              </li>
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Subject") ? "active" : "")">
+                <a href="/konular" class="sidenav-link"><i class="sidenav-icon fas fa-book"></i><div>Konular</div></a>
+              </li>
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "SubTopic") ? "active" : "")">
+                <a href="/alt-konular" class="sidenav-link"><i class="sidenav-icon fas fa-book-open"></i><div>Alt Konular</div></a>
+              </li>
+              
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Question") ? "active" : "")">
+                <a href="/soru/tum-sorular" class="sidenav-link"><i class="sidenav-icon fas fa-question-circle"></i><div>Tüm Sorular</div></a>
+              </li>
+              
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "QuestionReports" ? "active" : "")">
+                <a href="/soru/raporlanan-sorular" class="sidenav-link"><i class="sidenav-icon fas fa-flag"></i><div>Raporlanan Sorular</div></a>
+              </li>
+              
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "CreatePdfTest" ? "active" : "")">
+                <a href="/pdf-test-ekle" class="sidenav-link"><i class="sidenav-icon fas fa-file-pdf"></i><div>PDF Test Ekle</div></a>
+              </li>
+            <li class="sidenav-item @(ViewContext.RouteData.Values["Action"].ToString() == "AllTests" ? "active" : "")">
+                <a href="/tum-testler" class="sidenav-link"><i class="sidenav-icon fas fa-file-pdf"></i><div>PDF Testler</div></a>
+              </li>
+              
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Organization") ? "active" : "")">
+                <a href="/kurumlar" class="sidenav-link"><i class="sidenav-icon fas fa-archway"></i><div>Kurumlar</div></a>
+              </li>
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "Staff") ? "active" : "")">
+                <a href="/kadrolar" class="sidenav-link"><i class="sidenav-icon fas fa-user-tie"></i><div>Kadrolar</div></a>
+              </li>             
+              <li class="sidenav-item @((ViewContext.RouteData.Values["Action"].ToString() == "Index" && ViewContext.RouteData.Values["Controller"].ToString() == "UnionBranch") ? "active" : "")">
+                <a href="/teskilat" class="sidenav-link"><i class="sidenav-icon fas fa-code-branch"></i><div>Teşkilat</div></a>
+              </li>                  
+            }
+            <li class="sidenav-divider mb-1"></li>
+          </ul>
+          @if (!User.IsInRole("admin"))
+          {
+            <div class="sidenav-user-info">
+              <img src="@(orgLogo)" />
+              <h5 class="text-center font-weight-bolder">@name?.ToUpper()</h5>
+            </div>
+          }
+            </div>
+                  }
+
+        <!-- / Layout sidenav -->
+
+        <div class="layout-content">
+
+          <!-- Page content -->
+          <div class="container-fluid flex-grow-1 container-p-y">
+
+            @RenderBody()
+          </div>
+          <!-- / Page content -->
+
+          <!-- Layout footer -->
+          <nav class="layout-footer footer bg-footer-theme">
+            <div class="container-fluid container-p-x pb-3">
+              <a href="/iletisim" class="footer-link pt-3">İletişim</a>
+              <a href="/hakkimizda" class="footer-link pt-3 ml-4">Hakkımızda</a>
+              <a href="/sorumluluk-reddi" class="footer-link pt-3 ml-4">Sorumluluk Reddi</a>
+              <a href="/uyelik-sozlesmesi" class="footer-link pt-3 ml-4">Üyelik Sözleşmesi</a>            
+              <a href="/telif-hakki" class="footer-link pt-3 ml-4">Telif Hakkı Bildirimi</a>            
+              <a href="mailto:admin@bmskariyer.com" class="footer-link pt-3 ml-4 float-right">Her Türlü Soru, Görüş ve Öneri için admin@bmskariyer.com</a>            
+
+            </div>
+          </nav>
+          <!-- / Layout footer -->
+
+        </div>
+      </div>
+
+    </div>
+    <!-- Layout inner -->
+
+    <div class="layout-overlay layout-sidenav-toggle"></div>
+  </div>
+  <!-- / Layout wrapper -->
+
+
+<environment include="Development">
+  <!-- Core scripts -->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <!--<script src="~/assets/js/popper/popper.js"></script> -->
+  <script src="~/assets/js/bootstrap.js"></script>
+  <script src="~/assets/js/sidenav.js"></script>
+
+  <!-- Libs -->
+  <script src="~/assets/js/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="~/assets/js/main.js"></script>
+
+
+</environment>
+
+<environment include="Production">
+  <script src="~/assets/js/site.min.js"></script>
+</environment>
+
+
+
+<script>
+$(function() {
+  // Tooltips
+
+  $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="popover"]').popover();
+
+
+});
+
+
+    $('#logout-form').submit(function (e)  {
+      e.preventDefault();    
+      $.ajax({
+          url: '/account/logout/',
+          type: 'POST',
+          success: function (data) {
+             localStorage.removeItem('token');
+             localStorage.removeItem(token);
+             localStorage.clear('token');
+             localStorage.clear(token);
+             
+
+             window.location.replace("/anasayfa");
+          },
+          cache: false,
+          contentType: false,
+          processData: false
+      });
+    });
+
+</script>
+
+@RenderSection("scripts", false)
+
+</body>
+</html>
